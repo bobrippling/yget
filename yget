@@ -1,0 +1,18 @@
+#!/bin/sh
+echo usage: `basename $0` youtube_url '[prefix=y]'
+[ $1 ] || exit 1
+[ $2 ] || set "$1" y
+URL=`echo "$1" |sed 's|/v/|/watch?v=|;s|/p/|/view_play_list?p=|;s|\?.*&v=|?v=|;s|&.*||'`
+if [ `echo "$URL"|grep '\?p='` ]
+then
+	# playlist url
+	n=`wget "$URL" -q -O- |grep 'Videos:'|sed 's|.*g>||;s|<.*||'`
+	for j in `seq $((1+n/10))`; do
+		for i in `wget "$URL&page=$j" -q -O- |grep ' ql="'|sed 's|[^/]*||;s|".*||'`; do n=`echo $i |sed 's|.*=||'`;$0 "youtube.com$i" $2`printf %02d_ $n`; done
+	done
+else
+	# video url
+	ID=`echo $URL |tail -c12`
+	URL=`wget $URL -O- |grep -m1 'var swfArgs'|sed 's|.*"t": "\([^"]*\)".*|youtube.com/get_video?t=\1|'`'&video_id='$ID
+	wget -O $2$ID'.mp4' $URL'&fmt=18' || wget -O $2$ID'.flv' $URL
+fi

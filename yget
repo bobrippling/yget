@@ -1,6 +1,5 @@
 #!/bin/sh
-echo usage: `basename $0` youtube_url '[prefix=y]'
-[ $1 ] || exit 1
+[ $1 ] || (echo usage: `basename $0` youtube_url '[prefix=y]'; exit 1)
 [ $2 ] || set "$1" y
 URL=`echo "$1" |sed 's|/v/|/watch?v=|;s|/p/|/view_play_list?p=|;s|\?.*&v=|?v=|;s|&.*||'`
 if [ `echo "$URL"|grep '\?p='` ]

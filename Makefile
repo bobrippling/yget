@@ -12,3 +12,8 @@ install:
 	$(CP) $(PWD)/yplay $(install_root)$(prefix)/bin/yplay
 
 linstall: install
+
+deb: FORCE
+	fakeroot debian/rules binary
+
+FORCE:

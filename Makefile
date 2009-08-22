@@ -14,8 +14,8 @@ install:
 	$(CP) $(PWD)/yurl $(install_root)$(prefix)/bin/yurl
 	mkdir -p $(install_root)$(manprefix)/man1
 	$(CP) $(PWD)/yget.1 $(install_root)$(manprefix)/man1/yget.1
-	ln -sf $(install_root)$(manprefix)/man1/yget.1 $(install_root)$(manprefix)/man1/yplay.1
-	ln -sf $(install_root)$(manprefix)/man1/yget.1 $(install_root)$(manprefix)/man1/yurl.1
+	ln -sf yget.1 $(install_root)$(manprefix)/man1/yplay.1
+	ln -sf yget.1 $(install_root)$(manprefix)/man1/yurl.1
 
 linstall: install
 

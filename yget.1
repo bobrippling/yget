@@ -1,0 +1,64 @@
+.TH YGET 1
+.SH NAME
+yget \- download youtube videos
+.br
+yplay \- play youtube videos
+.br
+yurl \- print youtube download URLs
+
+.SH SYNOPSIS
+.B yget
+.RB URL \ [ prefix ]
+.br
+.B yplay
+.RB URL
+.br
+.B yurl
+.RB URL
+
+.SH DESCRIPTION
+.B yget
+saves the video at the given youtube URL. The file name is the video id
+with the given prefix. The default prefix is "y". If the URL points to a
+playlist then
+.B yget
+will download all videos in it and save them with prefix
+"y[number]_".
+.P
+.B yplay
+streams the video of the given youtube URL.
+.P
+.B yurl
+prints the download URL for the given youtube page URL.
+
+.SH EXAMPLES
+yplay "youtube.com/watch?v=abcdefghijk&foo=123&bar=456"
+.br
+yget http://www.youtube.com/watch?v=abcdefghijk
+.br
+yget youtube.co.uk/watch?v=abcdefghijk
+.br
+yget http://youtube.com/v/abcdefghijk
+.br
+yget http://www.youtube.com/view_play_list?p=abcdefghijklmnop
+.br
+yget http://youtube.com/p/abcdefghijklmnop
+
+.SH NOTES
+If the URL has query parameters ("&foo=bar") then don't forget to quote
+the URL. These parameters are dropped in the scripts, only the video or
+playlist id is used.
+.P
+Any recent mplayer or vlc should be able to stream the video from the
+URL that
+.B yurl
+prints. Seeking in the stream might not work.
+.B yplay
+uses mplayer.
+.P
+The scripts try to get the H.264 encoded version ("&fmt=18") first, that
+has .mp4 container format, if that fails then the .flv version is tried
+as well.
+.B yurl
+only prints the URL for the .mp4.
+

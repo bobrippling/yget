@@ -1,5 +1,6 @@
 #!/bin/sh
-[ $1 ] || (echo "usage: $0 youtube_url"; exit 1)
+[ $1 ] || echo "usage: $0 url"
+[ $1 ] || exit 1
 URL=`echo "$1" |sed 's|/v/|/watch?v=|;s|/p/|/view_play_list?p=|;s|\?.*&v=|?v=|;s|&.*||'`
 if [ `echo "$URL"|grep '\?p='` ]
 then

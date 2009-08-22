@@ -11,5 +11,5 @@ then
 	done
 else
 	# video url
-	wget $URL -q -O- |grep -m1 'var swfArgs'|sed 's|.*"t": "\([^"]*\)".*|http://youtube.com/get_video?video_id='`echo $URL |tail -c12`'\&t=\1\&fmt=18|'
+	wget $URL -q -O- |grep -m1 'var swfArgs'|sed 's|.*"t": "\([^"]*\)".*|http://www.youtube.com/get_video?video_id='`echo $URL |tail -c12`'\&t=\1\&fmt=18|'
 fi

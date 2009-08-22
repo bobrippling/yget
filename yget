@@ -13,6 +13,6 @@ then
 else
 	# video url
 	ID=`echo $URL |tail -c12`
-	URL=`wget $URL -O- |grep -m1 'var swfArgs'|sed 's|.*"t": "\([^"]*\)".*|youtube.com/get_video?t=\1|'`'&video_id='$ID
+	URL=`wget $URL -O- |grep -m1 'var swfArgs'|sed 's|.*"t": "\([^"]*\)".*|www.youtube.com/get_video?t=\1|'`'&video_id='$ID
 	wget -O $2$ID'.mp4' $URL'&fmt=18' || wget -O $2$ID'.flv' $URL
 fi

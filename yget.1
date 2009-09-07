@@ -18,18 +18,20 @@ yurl \- print youtube download URLs
 
 .SH DESCRIPTION
 .B yget
-saves the video at the given youtube URL. The file name is the video id
+saves the video of the given youtube URL. The filename is the video id
 with the given prefix. The default prefix is "y". If the URL points to a
 playlist then
 .B yget
-will download all videos in it and save them with prefix
-"y[number]_".
+will download all videos in it and save them with prefix "y[number]_".
+If the filename already exists then
+.B yget
+assumes that the video is unfinished and tries to continue the download.
 .P
 .B yplay
 streams the video of the given youtube URL.
 .P
 .B yurl
-prints the download URL for the given youtube page URL.
+prints the video download URL for the given youtube URL.
 
 .SH EXAMPLES
 yplay "youtube.com/watch?v=abcdefghijk&foo=123&bar=456"
@@ -42,23 +44,24 @@ yget http://youtube.com/v/abcdefghijk
 .br
 yget http://www.youtube.com/view_play_list?p=abcdefghijklmnop
 .br
-yget http://youtube.com/p/abcdefghijklmnop
+yurl http://youtube.com/p/abcdefghijklmnop
 
 .SH NOTES
-If the URL has query parameters ("&foo=bar") then don't forget to quote
-the URL. These parameters are dropped in the scripts, only the video or
-playlist id is used.
+If the URL has query parameters ("&foo=bar") then the "&" might need to
+be escaped in the shell. Internally these parameters are dropped, only
+the video or playlist id is used.
 .P
 Any recent mplayer or vlc should be able to stream the video from the
-URL that
-.B yurl
-prints. Seeking in the stream might not work.
+URL printed by
+.BR yurl .
+Seeking in the stream might not work.
 .B yplay
 uses mplayer.
 .P
-The scripts try to get the H.264 encoded version ("&fmt=18") first, that
-has .mp4 container format, if that fails then the .flv version is tried
-as well.
+.B yget
+and
+.B yplay
+try to get the H.264 encoded version ("&fmt=18") first, with .mp4
+container format, if it fails then they fall back to the .flv version.
 .B yurl
-only prints the URL for the .mp4.
-
+only prints the URL for the .mp4 version.

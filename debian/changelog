@@ -1,3 +1,9 @@
+yget (2.0.0-r14) unstable; urgency=low
+
+  * Initial packaging
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Mon, 16 Nov 2009 13:44:29 +0100
+
 yget (1.0.0-r365) unstable; urgency=low
 
   * Initial packaging

@@ -4,7 +4,7 @@ yget \- download youtube videos
 .br
 yplay \- play youtube videos
 .br
-yurl \- print youtube download URLs
+yurl \- print youtube download URLs and additional informations
 
 .SH SYNOPSIS
 .B yget
@@ -31,7 +31,8 @@ assumes that the video is unfinished and tries to continue the download.
 streams the video of the given youtube URL.
 .P
 .B yurl
-prints the video download URL for the given youtube URL.
+prints a key value pair list about the given youtube URL
+(download url, title, length, etc.).
 
 .SH EXAMPLES
 yplay "youtube.com/watch?v=abcdefghijk&foo=123&bar=456"
@@ -51,17 +52,17 @@ If the URL has query parameters ("&foo=bar") then the "&" might need to
 be escaped in the shell. Internally these parameters are dropped, only
 the video or playlist id is used.
 .P
+.B yget
+and
+.B yplay
+try to get the H.264 encoded version ("&fmt=18"), with .mp4
+container format. For other versions use the output of
+.B yurl
+(possible fmt parameters are 0 5 6 13 17 18 22 34 35 37)
+.P
 Any recent mplayer or vlc should be able to stream the video from the
 URL printed by
 .BR yurl .
 Seeking in the stream might not work.
 .B yplay
 uses mplayer.
-.P
-.B yget
-and
-.B yplay
-try to get the H.264 encoded version ("&fmt=18") first, with .mp4
-container format, if it fails then they fall back to the .flv version.
-.B yurl
-only prints the URL for the .mp4 version.

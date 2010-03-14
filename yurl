@@ -1,15 +1,77 @@
 #!/bin/sh
-[ $1 ] || echo "usage: $(basename $0) URL"
-[ $1 ] || exit 1
-URL=`echo "$1" |sed 's|/v/|/watch?v=|;s|/p/|/view_play_list?p=|;s|\?.*&v=|?v=|;s|&.*||'`
+
+[ "$1" ] || { echo "usage: $0 URL"; exit 1; }
+URL=`echo "$1" |sed 's|#!|?|;s|/v/|/watch?v=|;s|/p/|/view_play_list?p=|;s|\?.*&v=|?v=|;s|&.*||'`
 if [ `echo "$URL"|grep '\?p='` ]
 then
 	# playlist url
 	n=`wget "$URL" -q -O- |grep 'Videos:'|sed 's|.*:||;s|<.*||'`
 	for j in `seq $((1+n/20))`; do
-		for i in `wget "$URL&page=$j" -q -O- |grep ' ql="'|sed 's|[^/]*||;s|".*||'`; do $0 "youtube.com$i"; done
+		for i in `wget "$URL&page=$j" -q -O- |grep ' ql="'|sed 's|[^/]*||;s|".*||'`; do
+			printf "%03d http://www.youtube.com$i\n" `echo "$i" |sed 's|.*=||'`
+		done
 	done
 else
 	# video url
-	wget $URL -q -O- |grep -m1 '"t": '|sed 's|.*"t": "\([^"]*\)".*|http://www.youtube.com/get_video?video_id='`echo $URL |tail -c12`'\&t=\1\&fmt=18|'
+	wget "$URL" -q -O- |awk '
+function unquote(s) {
+	gsub(/%2F/, "/", s)
+	gsub(/%2C/, ",", s)
+	return s
+}
+function strip() {
+	sub(/^[^:]*: '\''?/, "")
+	sub(/'\''?,$/, "")
+}
+/VIDEO_TITLE/ {
+	strip()
+	c["title"] = $0
+}
+/IS_WIDESCREEN/ {
+	strip()
+	c["wide"] = $0
+}
+/IS_HD_AVAILABLE/ {
+	strip()
+	c["hd"] = $0
+}
+function getvars() {
+	for (i in a) {
+		split(a[i], b, /[:=] ?/)
+		c[b[1]] = unquote(b[2])
+	}
+	# fix keys
+	c["id"] = c["video_id"]
+	c["length"] = c["length_seconds"]
+	c["tags"] = c["keywords"]
+	c["fmt"] = c["fmt_map"]
+	gsub(/\/[^,]*/, "", c["fmt"])
+	c["url"] = "http://www.youtube.com/get_video?video_id=" c["video_id"] "&t=" c["t"]
+	c["thumb"] = "http://i.ytimg.com/vi/" c["video_id"] "/default.jpg"
+	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
+	ok = 1
+}
+/name=\\"flashvars\\"/ {
+	sub(/^.*flashvars\\" value=\\"/, "")
+	sub(/\\".*$/, "")
+	split($0, a, /&amp;/)
+	getvars()
+}
+/SWF_ARGS/ {
+	sub(/^.*{/, "")
+	sub(/}.*$/, "")
+	gsub(/"/, "")
+	split($0, a, /, /)
+	getvars()
+}
+/);/ && ok {
+	N = split("url fmt id t length tags title wide hd thumb thumbhq", a)
+	for (i = 1; i <= N; i++)
+		print a[i] "\t" c[a[i]]
+	exit 0
+}
+END {
+	if (!ok)
+		exit 1
+}'
 fi

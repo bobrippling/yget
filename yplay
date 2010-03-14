@@ -1,6 +1,6 @@
 #!/bin/sh
-[ $1 ] || echo "usage: $(basename $0) URL"
-[ $1 ] || exit 1
-URL=`echo "$1"|sed 's|/v/|/watch?v=|;s|\?.*&v=|?v=|;s|&.*||'`
-URL=`wget $URL -O- |grep -m1 '"t": '|sed 's|.*"t": "\([^"]*\)".*|http://www.youtube.com/get_video?t=\1\&video_id=|'``echo $URL|tail -c12`
-mplayer -prefer-ipv4 -cache 4096 $URL'&fmt=18' || mplayer -prefer-ipv4 -cache 4096 $URL
+./yurl "$1" |awk '
+/^url/ {url=$2}
+{print}
+END { if (url) system("mplayer -prefer-ipv4 '\''" url "&fmt=18'\''") }
+'

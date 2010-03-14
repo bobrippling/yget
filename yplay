@@ -1,6 +1,6 @@
 #!/bin/sh
 [ "$1" ] || { echo "usage: $0 URL"; exit 1; }
-./yurl "$1" |awk '
+yurl "$1" |awk '
 /^url/ {url=$2}
 {print}
 END { if (url) system("mplayer -prefer-ipv4 '\''" url "&fmt=18'\''") }

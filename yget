@@ -1,7 +1,8 @@
 #!/bin/sh
+# TODO: fmt = 0 5 6 13 17 18 22 34 35 37
 ./yurl "$1" |awk '
 /^url/ {url=$2}
 /^id/ {id=$2}
 {print}
-END { if (url) system("wget -c -O y" id ".mp4 '\''" url "'\''") }
+END { if (url) system("wget -c -O y" id ".mp4 '\''" url "&fmt=18'\''") }
 '

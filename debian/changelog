@@ -1,3 +1,11 @@
+yget (2.1.0-r30) unstable; urgency=low
+
+  * yget, yplay is based on yurl
+  * yurl prints infos
+  * yfmt prints available fmt
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Wed, 12 May 2010 11:15:49 +0200
+
 yget (2.0.0-r14) unstable; urgency=low
 
   * Initial packaging

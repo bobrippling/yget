@@ -7,7 +7,7 @@ then
 	# playlist url
 	n=`wget "$URL" -q -O- |grep 'Videos:'|sed 's|.*:||;s|<.*||'`
 	for j in `seq $((1+n/20))`; do
-		for i in `wget "$URL&page=$j" -q -O- |grep ' ql="'|sed 's|[^/]*||;s|".*||'`; do
+		for i in `wget "$URL&page=$j" -q -O- |grep 'id="video-long-title'|sed 's|[^/]*||;s|".*||'`; do
 			printf "%03d http://www.youtube.com$i\n" `echo "$i" |sed 's|.*=||'`
 		done
 	done

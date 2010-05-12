@@ -6,10 +6,10 @@ URL=`yurl "$@" | awk '/url/{print $2}'`
 #for i in `seq 0 99`
 for i in 0 5 6 13 17 18 22 34 35 36 37
 do
-#	mplayer -identify -really-quiet -frames 0 -vo null -ao null "$URL"
+#	mplayer -identify -really-quiet -frames 0 -vo null -ao null "$URL&fmt=$i"
 	curl -s -L -I "$URL&fmt=$i" | awk -v fmt=$i '
 		/200 OK/{ok = 1}
 		/Content-Length/{len = $2}
-		END{if (ok) print fmt, len}'
-	sleep 1
+		END{if (ok) printf "%2s %12s\n", fmt, len}'
+	sleep 0.5
 done

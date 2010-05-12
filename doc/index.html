@@ -10,4 +10,69 @@
 <p>Latest: <tt>svn co svn://repo.hu/yget/trunk yget</tt>
 <p>Releases: <a href="http://repo.hu/projects/yget/releases/">repo.hu/projects/yget/releases</a>
 <p>Debian packages: <a href="http://repo.hu/debian/">http://repo.hu/debian</a>
+<h2>Manual</h2>
+<pre>
+YGET(1)                                                                YGET(1)
+
+
+
+NAME
+       yget - download youtube videos
+       yplay - play youtube videos
+       yurl - print youtube download URLs and additional informations
+       yfmt - check available youtube video formats
+
+
+SYNOPSIS
+       yget URL [prefix]
+       yplay URL
+       yurl URL
+       yfmt URL
+
+
+DESCRIPTION
+       yget  saves  the  video  of  the given youtube URL. The filename is the
+       video id with the given prefix. The default prefix is "y". If  the  URL
+       points  to a playlist then yget will download all videos in it and save
+       them with prefix "y[number]_".  If the  filename  already  exists  then
+       yget  assumes  that  the  video is unfinished and tries to continue the
+       download.
+
+       yplay streams the video of the given youtube URL.
+
+       yurl prints a key value pair list about the given youtube URL (download
+       url, title, length, etc.).
+
+       yfmt  prints  the  available fmt arguments for a video URL and the file
+       sizes.  (Video format can be selected by adding '&amp;fmt=[fmt number]'  to
+       a download url).
+
+
+EXAMPLES
+       yplay "youtube.com/watch?v=abcdefghijk&amp;foo=123&amp;bar=456"
+       yget http://www.youtube.com/watch?v=abcdefghijk
+       yget youtube.co.uk/watch?v=abcdefghijk
+       yget http://youtube.com/v/abcdefghijk
+       yget http://www.youtube.com/view_play_list?p=abcdefghijklmnop
+       yurl http://youtube.com/p/abcdefghijklmnop
+
+
+NOTES
+       If the URL has query parameters ("&amp;foo=bar") then the "&amp;" might need to
+       be escaped in the shell. Internally these parameters are dropped,  only
+       the video or playlist id is used.
+
+       yget  and  yplay  try  to get a medium resolution H.264 encoded version
+       ("&amp;fmt=18"), with .mp4 container format. For  other  versions  use  the
+       download  url  from yurl (possible fmt parameters are 0 5 6 13 17 18 22
+       34 35 37)
+
+       Any recent mplayer or vlc should be able to stream the video  from  the
+       URL printed by yurl.  Seeking in the stream might not work.  yplay uses
+       mplayer.
+
+
+
+                                                                       YGET(1)
+</pre>
 </html>

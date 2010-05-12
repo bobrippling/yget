@@ -27,7 +27,7 @@ function getmeta() {
 	sub(/^.*content="/, "")
 	sub(/".*$/, "")
 	gsub(/&quot;/, "\"")
-	gsub(/&amp;/, "&")
+	gsub(/&amp;/, "\\&")
 }
 /<meta name="title"/ {
 	getmeta()
@@ -85,7 +85,7 @@ function getvars() {
 END {
 	if (!ok)
 		exit 1
-	N = split("url fmt id t length tags title desc wide hd thumb thumbhq", a)
+	N = split("url fmt id t length title desc tags wide hd thumb thumbhq", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 	exit 0

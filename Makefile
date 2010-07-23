@@ -12,12 +12,10 @@ install:
 	$(CP) $(PWD)/yget $(install_root)$(prefix)/bin/yget
 	$(CP) $(PWD)/yplay $(install_root)$(prefix)/bin/yplay
 	$(CP) $(PWD)/yurl $(install_root)$(prefix)/bin/yurl
-	$(CP) $(PWD)/yfmt $(install_root)$(prefix)/bin/yfmt
 	mkdir -p $(install_root)$(manprefix)/man1
 	$(CP) $(PWD)/yget.1 $(install_root)$(manprefix)/man1/yget.1
 	ln -sf yget.1 $(install_root)$(manprefix)/man1/yplay.1
 	ln -sf yget.1 $(install_root)$(manprefix)/man1/yurl.1
-	ln -sf yget.1 $(install_root)$(manprefix)/man1/yfmt.1
 
 linstall: install
 

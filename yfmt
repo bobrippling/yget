@@ -1,15 +1,21 @@
 #!/bin/sh
 
-# prints fmt size
-
-URL=`yurl "$@" | awk '/url/{print $2}'`
-#for i in `seq 0 99`
-for i in 0 5 6 13 17 18 22 34 35 36 37
+# prints info for each available format
+URL=`yurl "$@" | awk '/id/{id=$2} /t/{print "http://www.youtube.com/get_video?video_id=" id "&t=" $2}'`
+for i in 5 6 13 17 18 22 34 35 36 37 43 45
 do
-#	mplayer -identify -really-quiet -frames 0 -vo null -ao null "$URL&fmt=$i"
 	curl -s -L -I "$URL&fmt=$i" | awk -v fmt=$i '
 		/200 OK/{ok = 1}
-		/Content-Length/{len = $2}
-		END{if (ok) printf "%2s %12s\n", fmt, len}'
-	sleep 0.5
+		/^Content-Type:/{if (ok) print "fmt\t" fmt "\ntype\t" $2; if ($2 ~ "webm") webm = 1}
+		/^Content-Length:/{if (ok) print "size\t" $2}
+		END {if (webm) print ""; if (!ok || webm) exit 1}' &&
+	mplayer -identify -really-quiet -frames 0 -vo null -ao null "$URL&fmt=$i" 2>/dev/null |awk '
+		BEGIN{FS="="}
+		/WIDTH/{print "width\t" $2}
+		/HEIGHT/{print "height\t" $2}
+		/VIDEO_CODEC/{print "vcodec\t" $2}
+		/AUDIO_CODEC/{print "acodec\t" $2}
+		END {print ""}
+	'
+#	sleep 1
 done

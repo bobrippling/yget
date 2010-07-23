@@ -1,14 +1,14 @@
 #!/bin/sh
-# TODO: fmt = 0 5 6 13 17 18 22 34 35 37
-[ "$1" ] || { echo "usage: $0 URL [prefix=y]"; exit 1; }
-[ "$2" ] || set "$1" y
+# TODO: fmt = 5 6 13 17 18 22 34 35 36 37 43 45
+[ $# -gt 0 ] || { echo "usage: $0 URL [prefix=y]"; exit 1; }
+[ $# -eq 2 ] || set -- "$1" y
 yurl "$1" |awk -v prefix="$2" -v cmd="$0" '
 /^00/ {list = 1}
-/^url/ {url=$2}
+/^url34/ {gsub('\'',""); url=$2}
 /^id/ {id=$2}
 {print}
 list { sub(/&.*/, ""); system(cmd " " $2 " " prefix $1 "_" ) }
 END {
 	if (url)
-		system("wget -c -O " prefix id ".mp4 '\''" url "&fmt=18'\''")
+		system("wget -c -O " prefix id ".mp4 '\''" url "'\''")
 }'

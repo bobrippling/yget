@@ -1,23 +1,48 @@
 #!/bin/sh
 
-[ "$1" ] || { echo "usage: $0 URL"; exit 1; }
-URL=`echo "$1" |sed 's|#!|?|;s|/v/|/watch?v=|;s|/p/|/view_play_list?p=|;s|\?.*&v=|?v=|;s|&.*||'`
-if [ `echo "$URL"|grep '\?p='` ]
-then
+[ $# -eq 1 ] || { echo "usage: $0 URL" >/dev/stderr; exit 1; }
+URL=`echo "$1" |sed 's|#!|?|;s|/v/|/watch?v=|;s|/p/|/view_play_list?p=|;s|?.*&v=|?v=|;s|&.*||'`
+case "$URL" in
+*\?p=* )
 	# playlist url
-	n=`wget "$URL" -q -O- |grep 'Videos:'|sed 's|.*:||;s|<.*||'`
-	for j in `seq $((1+n/20))`; do
-		for i in `wget "$URL&page=$j" -q -O- |grep 'id="video-long-title'|sed 's|[^/]*||;s|".*||'`; do
-			printf "%03d http://www.youtube.com$i\n" `echo "$i" |sed 's|.*=||'`
-		done
-	done
-else
+	p=1
+	while wget "$URL&page=$p" -q -O- |awk -v pat="page=$((p+1))\"" '
+		$0 ~ pat {ok=1}
+		/id="video-long-title/ {
+			sub(/[^/]*/,""); sub(/".*/,""); sub(/&.*=/," ")
+			printf "%03d http://www.youtube.com%s\n",$2,$1
+		}
+		END {if (!ok) exit 1}'
+	do
+		p=$((p+1))
+	done ;;
+* )
 	# video url
 	wget "$URL" -q -O- |awk '
+BEGIN {
+	for (i = 0; i < 256; i++)
+		tab[sprintf("%X", i)] = sprintf("%c", i)
+}
+
 function unquote(s) {
-	gsub(/%2F/, "/", s)
-	gsub(/%2C/, ",", s)
-	return s
+	n = split(s, t, "%")
+	r = t[1]
+	for (i = 2; i <= n; i++) {
+		x = substr(t[i], 1, 2)
+		if (x in tab)
+			r = r tab[x] substr(t[i], 3)
+		else
+			r = r "%" t[i]
+	}
+#	gsub(/%2F/, "/", s)
+#	gsub(/%2C/, ",", s)
+#	gsub(/%7C/, "|", s)
+#	gsub(/%3A/, ":", s)
+#	gsub(/%3F/, "?", s)
+#	gsub(/%3D/, "=", s)
+#	gsub(/%26/, "&", s)
+#	gsub(/%25/, "%", s)
+	return r
 }
 function strip() {
 	sub(/^[^:]*: '\''?/, "")
@@ -53,6 +78,9 @@ function getmeta() {
 	strip()
 	c["hd"] = $0
 }
+/verify-age/ {
+	unsafe=1
+}
 function getvars() {
 	for (i in a) {
 		split(a[i], b, /[:=] ?/)
@@ -63,10 +91,18 @@ function getvars() {
 	c["length"] = c["length_seconds"]
 #	c["tags"] = c["keywords"]
 	c["fmt"] = c["fmt_map"]
-	gsub(/\/[^,]*/, "", c["fmt"])
-	c["url"] = "http://www.youtube.com/get_video?video_id=" c["video_id"] "&t=" c["t"]
+	gsub(/\/.\/.\/[^,\/]*/, "", c["fmt"])
+	gsub(/=/, "%3D", c["t"])
+#	c["url"] = "http://www.youtube.com/get_video?video_id=" c["video_id"] "&t=" c["t"]
 	c["thumb"] = "http://i.ytimg.com/vi/" c["video_id"] "/default.jpg"
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
+
+	n = split(c["fmt_url_map"], u, ",")
+	for (i = 1; i < n; i++) {
+		split(u[i], ui, "|")
+		fmt = fmt " url" ui[1]
+		c["url" ui[1]] = ui[2]
+	}
 	ok = 1
 }
 /name=\\"flashvars\\"/ {
@@ -82,12 +118,17 @@ function getvars() {
 	split($0, a, /, /)
 	getvars()
 }
+#/var swfConfig = {/
+#/PLAYER_CONFIG/
 END {
-	if (!ok)
+	if (!ok) {
+		if (unsafe)
+			print "err\t(verify your age by signing in)"
 		exit 1
-	N = split("url fmt id t length title desc tags wide hd thumb thumbhq", a)
+	}
+	N = split("fmt" fmt " id t length title desc tags wide hd thumb thumbhq", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 	exit 0
 }'
-fi
+esac

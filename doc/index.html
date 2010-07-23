@@ -20,14 +20,12 @@ NAME
        yget - download youtube videos
        yplay - play youtube videos
        yurl - print youtube download URLs and additional informations
-       yfmt - check available youtube video formats
 
 
 SYNOPSIS
        yget URL [prefix]
        yplay URL
        yurl URL
-       yfmt URL
 
 
 DESCRIPTION
@@ -43,14 +41,10 @@ DESCRIPTION
        yurl prints a key value pair list about the given youtube URL (download
        url, title, length, etc.).
 
-       yfmt  prints  the  available fmt arguments for a video URL and the file
-       sizes.  (Video format can be selected by adding "&amp;fmt=[fmt number]"  to
-       a download url).
-
 
 EXAMPLES
-       yplay "youtube.com/watch?v=abcdefghijk&amp;foo=123&amp;bar=456"
-       yget youtube.co.uk/watch?v=abcdefghijk
+       yplay "youtube.co.uk/watch?v=abcdefghijk&amp;foo=123&amp;bar=456"
+       yget youtu.be/abcdefghijk
        yget http://youtube.com/v/abcdefghijk
        yget http://www.youtube.com/view_play_list?p=abcdefghijklmnop
        yurl http://youtube.com/p/abcdefghijklmnop
@@ -61,14 +55,14 @@ NOTES
        be escaped in the shell. Internally these parameters are dropped,  only
        the video or playlist id is used.
 
-       yget  and  yplay  try  to get a medium resolution H.264 encoded version
-       ("&amp;fmt=18"), with .mp4 container format. For  other  versions  use  the
-       download  url  from yurl (possible fmt parameters are 0 5 6 13 17 18 22
-       34 35 37)
+       yget  and  yplay  try to get a 640x360 resolution H.264 encoded version
+       (fmt=34), with .mp4 container format. For other versions see the  down-
+       load url## from yurl (possible fmt parameters are 5 6 13 17 18 22 34 35
+       37 43 45)
 
        Any recent mplayer or vlc should be able to stream the video  from  the
-       URL printed by yurl.  Seeking in the stream might not work.  yplay uses
-       mplayer.
+       urls  printed  by  yurl.   Seeking in the stream might not work.  yplay
+       uses mplayer.
 
 
 

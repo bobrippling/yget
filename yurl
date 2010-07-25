@@ -98,7 +98,7 @@ function getvars() {
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
 
 	n = split(c["fmt_url_map"], u, ",")
-	for (i = 1; i < n; i++) {
+	for (i = 1; i <= n; i++) {
 		split(u[i], ui, "|")
 		fmt = fmt " url" ui[1]
 		c["url" ui[1]] = ui[2]

@@ -5,6 +5,7 @@
 yurl "$1" |awk -v prefix="$2" -v cmd="$0" '
 /^00/ {list = 1}
 /^url34/ {gsub("'\''",""); url=$2}
+/^url5/ && !url {gsub("'\''",""); url=$2}
 /^id/ {id=$2}
 {print}
 list { sub(/&.*/, ""); system(cmd " " $2 " " prefix $1 "_" ) }

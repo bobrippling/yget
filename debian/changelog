@@ -1,3 +1,11 @@
+yget (2.2.1-r44) unstable; urgency=low
+
+  * get_video?video_id=...&t=...&fmt=.. no longer works
+  * new method: using urls from url_fmt_map
+  * yfmt not needed anymore, yget and yplay gets fmt 34 or 5
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Wed, 28 Jul 2010 08:56:33 +0200
+
 yget (2.1.0-r30) unstable; urgency=low
 
   * yget, yplay is based on yurl

@@ -34,14 +34,6 @@ function unquote(s) {
 		else
 			r = r "%" t[i]
 	}
-#	gsub(/%2F/, "/", s)
-#	gsub(/%2C/, ",", s)
-#	gsub(/%7C/, "|", s)
-#	gsub(/%3A/, ":", s)
-#	gsub(/%3F/, "?", s)
-#	gsub(/%3D/, "=", s)
-#	gsub(/%26/, "&", s)
-#	gsub(/%25/, "%", s)
 	return r
 }
 function strip() {

@@ -11,5 +11,5 @@ yurl "$1" |awk -v prefix="$2" -v cmd="$0" '
 list { sub(/&.*/, ""); system(cmd " " $2 " " prefix $1 "_" ) }
 END {
 	if (url)
-		system("wget -c -O " prefix id ".mp4 '\''" url "'\''")
+		system("wget -c -O " prefix id ".flv '\''" url "'\''")
 }'

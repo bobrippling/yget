@@ -1,21 +1,24 @@
 #!/bin/sh
 
 [ $# -eq 1 ] || { echo "usage: $0 URL" >/dev/stderr; exit 1; }
-URL=`echo "$1" |sed 's|#!|?|;s|/v/|/watch?v=|;s|/p/|/view_play_list?p=|;s|?.*&v=|?v=|;s|&.*||'`
+URL='http://www.youtube.com/'$(echo "$1"|sed '
+	s|[&!?=]|/|g
+	s|^...........$|/v/&|
+	s|.*\.be/|/v/|
+	s|.*/v/\([^/]*\).*|watch?v=\1|
+	s|.*/p/\([^/]*\).*|view_play_list?p=\1|')
 case "$URL" in
 *\?p=* )
 	# playlist url
 	p=1
-	while wget "$URL&page=$p" -q -O- |awk -v pat="page=$((p+1))\"" '
-		$0 ~ pat {ok=1}
-		/id="video-long-title/ {
-			sub(/[^/]*/,""); sub(/".*/,""); sub(/&.*=/," ")
-			printf "%03d http://www.youtube.com%s\n",$2,$1
-		}
-		END {if (!ok) exit 1}'
-	do
-		p=$((p+1))
-	done ;;
+	wget "$URL" -q -O- |awk '/data-video-ids/{
+		sub(/.*data-video-ids="/, "")
+		sub(/".*/, "")
+		n = split($0, a, ",")
+		for (i = 1; i <= n; i++)
+			printf "%03d http://www.youtube.com/watch?v=%s\n", i, a[i]
+		exit
+	}' ;;
 * )
 	# video url
 	wget "$URL" -q -O- |awk '

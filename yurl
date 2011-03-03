@@ -4,6 +4,7 @@
 URL='http://www.youtube.com/'$(echo "$1"|sed '
 	s|[&!?=]|/|g
 	s|^...........$|/v/&|
+	s|/embed/|/v/|
 	s|.*\.be/|/v/|
 	s|.*/v/\([^/]*\).*|watch?v=\1|
 	s|.*/p/\([^/]*\).*|view_play_list?p=\1|')
@@ -100,10 +101,10 @@ function getvars() {
 	}
 	ok = 1
 }
-/name=\\"flashvars\\"/ {
-	sub(/^.*flashvars\\" value=\\"/, "")
-	sub(/\\".*$/, "")
-	split($0, a, /&/)
+/flashvars="/ {
+	sub(/^.*flashvars="/, "")
+	sub(/".*$/, "")
+	split($0, a, /&amp;/)
 	getvars()
 }
 /SWF_ARGS/ {

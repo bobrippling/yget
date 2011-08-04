@@ -38,18 +38,29 @@ BEGIN {
 	for (i = 0; i < 256; i++)
 		tab[sprintf("%X", i)] = sprintf("%c", i)
 }
-
-function unquote(s, i,n,x,r,t) {
+function unquote(s, i,n,x,t) {
 	n = split(s, t, "%")
-	r = t[1]
+	s = t[1]
 	for (i = 2; i <= n; i++) {
 		x = substr(t[i], 1, 2)
 		if (x in tab)
-			r = r tab[x] substr(t[i], 3)
+			s = s tab[x] substr(t[i], 3)
 		else
-			r = r "%" t[i]
+			s = s "%" t[i]
 	}
-	return r
+	return s
+}
+function unquote2(s, i,n,x,t) {
+	n = split(s, t, "&#")
+	s = t[1]
+	for (i = 2; i <= n; i++) {
+		x = substr(t[i], 1, 2) + 0
+		if (x > 9 && x < 100)
+			s = s sprintf("%c", x) substr(t[i], 4)
+		else
+			s = s "&#" t[i]
+	}
+	return s
 }
 function strip() {
 	sub(/^[^:]*: '\''?/, "")
@@ -60,6 +71,7 @@ function getmeta() {
 	sub(/".*$/, "")
 	gsub(/&quot;/, "\"")
 	gsub(/&amp;/, "\\&")
+	$0 = unquote2($0)
 }
 /<meta name="title"/ {
 	getmeta()
@@ -71,11 +83,7 @@ function getmeta() {
 }
 /<meta name="keywords"/ {
 	getmeta()
-	c["tags"] = $0
-}
-/VIDEO_TITLE/ {
-	strip()
-	c["title"] = $0
+	c["keywords2"] = $0
 }
 /IS_WIDESCREEN/ {
 	strip()
@@ -101,10 +109,9 @@ function getvars() {
 	# fix keys
 	c["id"] = c["video_id"]
 	c["length"] = c["length_seconds"]
-#	c["tags"] = c["keywords"]
-#	c["fmt"] = c["fmt_map"]
-#	gsub(/\/.\/.\/[^,\/]*/, "", c["fmt"])
-	gsub(/=/, "%3D", c["t"])
+#	c["tags"] = c["keywords2"]
+	c["tags"] = c["keywords"]
+#	gsub(/=/, "%3D", c["t"])
 #	c["url"] = "http://www.youtube.com/get_video?video_id=" c["video_id"] "&t=" c["t"]
 	c["thumb"] = "http://i.ytimg.com/vi/" c["video_id"] "/default.jpg"
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
@@ -123,18 +130,8 @@ function getvars() {
 		c["url" it] = d["url"]
 		c["fmt" it] = d["type"]
 		urls = urls " fmt" it " url" it
+		c["fmts"] = c["fmts"] it " "
 	}
-#	if (!n) {
-#		print "OLD"
-#		n = split(c["fmt_stream_map"], u, ",")
-#		if (!n)
-#			n = split(c["fmt_url_map"], u, ",")
-#		for (i = 1; i <= n; i++) {
-#			split(u[i], ui, "|")
-#			urls = urls " url" ui[1]
-#			c["url" ui[1]] = ui[2]
-#		}
-#	}
 	n = split(c["fmt_list"], u, ",")
 	for (i = 1; i <= n; i++) {
 		k = split(u[i],a,/\//)
@@ -170,7 +167,7 @@ END {
 		exit 1
 	}
 #	N = split("fmt fmt_list " urls " id t length title desc tags wide hd thumb thumbhq list", a)
-	N = split(urls " id length title desc tags thumbhq list", a)
+	N = split("fmts " urls " id length title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 }'

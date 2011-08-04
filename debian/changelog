@@ -1,3 +1,9 @@
+yget (2.3.1-r60) unstable; urgency=low
+
+  * fix playlist
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Thu, 04 Aug 2011 13:02:10 +0200
+
 yget (2.3.0-r57) unstable; urgency=low
 
   * bump version number after some cleanups

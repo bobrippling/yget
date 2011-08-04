@@ -4,5 +4,4 @@ yurl "$1" |awk '
 /^url34/ {gsub("'\''",""); url=$2}
 /^url5/ && !url {gsub("'\''",""); url=$2}
 {print}
-END { if (url) system("mplayer -prefer-ipv4 '\''" url "'\''") }
-'
+END { if (url) system("mplayer -prefer-ipv4 '\''" url "'\''") }'

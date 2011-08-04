@@ -1,34 +1,45 @@
 #!/bin/sh
 
-[ $# -eq 1 ] || { echo "usage: $0 URL" >/dev/stderr; exit 1; }
-URL='http://www.youtube.com/'$(echo "$1"|sed '
-	s|[&!?=]|/|g
+[ $# -eq 1 ] || { echo "usage: $0 URL" 1>&2; exit 1; }
+V=$(echo "$1"|sed '
+	s|[&!?=#]|/|g
 	s|^...........$|/v/&|
 	s|/embed/|/v/|
 	s|.*\.be/|/v/|
-	s|.*/v/\([^/]*\).*|watch?v=\1|
-	s|.*/p/\([^/]*\).*|view_play_list?p=\1|')
-case "$URL" in
-*\?p=* )
+	s|.*/v/\([^/]*\).*|\1|
+	s|.*/v/.*||
+	s|^.............*||')
+P=$(echo "$1"|sed '
+	s|[&!?=#]|/|g
+	s|^P*L*\(................\)$|/p/\1|
+	s|/list/P*L*\(................\)$|/p/\1|
+	s|.*/p/\([^/]*\).*|\1|
+	s|.*/p/.*||
+	s|^...........$||')
+VURL="http://www.youtube.com/watch?v=$V"
+PURL="http://www.youtube.com/view_play_list?p=$P"
+[ "$P" ] || [ "$V" ] || { echo 'no video id or playlist id found' 1>&2; exit 1; }
+[ "$V" ] || {
 	# playlist url
 	p=1
-	wget "$URL" -q -O- |awk '/data-video-ids/{
+	wget "$PURL" -q -O- |awk '/data-video-ids/{
 		sub(/.*data-video-ids="/, "")
 		sub(/".*/, "")
 		n = split($0, a, ",")
 		for (i = 1; i <= n; i++)
 			printf "%03d http://www.youtube.com/watch?v=%s\n", i, a[i]
 		exit
-	}' ;;
-* )
+	}'
+}
+[ "$V" ] && {
 	# video url
-	wget "$URL" -q -O- |awk '
+	wget "$VURL" -q -O- |awk -v pl=$P '
 BEGIN {
 	for (i = 0; i < 256; i++)
 		tab[sprintf("%X", i)] = sprintf("%c", i)
 }
 
-function unquote(s) {
+function unquote(s, i,n,x,r,t) {
 	n = split(s, t, "%")
 	r = t[1]
 	for (i = 2; i <= n; i++) {
@@ -80,24 +91,54 @@ function getmeta() {
 function getvars() {
 	for (i in a) {
 		split(a[i], b, /[:=] ?/)
+		sub(/^"/,"",b[1])
+		sub(/"$/,"",b[1])
+		sub(/^"/,"",b[2])
+		sub(/"$/,"",b[2])
 		c[b[1]] = unquote(b[2])
+#		print b[1],c[b[1]]
 	}
 	# fix keys
 	c["id"] = c["video_id"]
 	c["length"] = c["length_seconds"]
 #	c["tags"] = c["keywords"]
-	c["fmt"] = c["fmt_map"]
-	gsub(/\/.\/.\/[^,\/]*/, "", c["fmt"])
+#	c["fmt"] = c["fmt_map"]
+#	gsub(/\/.\/.\/[^,\/]*/, "", c["fmt"])
 	gsub(/=/, "%3D", c["t"])
 #	c["url"] = "http://www.youtube.com/get_video?video_id=" c["video_id"] "&t=" c["t"]
 	c["thumb"] = "http://i.ytimg.com/vi/" c["video_id"] "/default.jpg"
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
+	c["list"] = pl
 
-	n = split(c["fmt_url_map"], u, ",")
+	n = split(c["url_encoded_fmt_stream_map"], u, ",")
 	for (i = 1; i <= n; i++) {
-		split(u[i], ui, "|")
-		fmt = fmt " url" ui[1]
-		c["url" ui[1]] = ui[2]
+		k = split(u[i],a,/&/)
+		for (j in a) {
+			split(a[j], b, /=/)
+			sub(/"/, "", b[2])
+			d[b[1]] = unquote(b[2])
+#			print i,b[1],d[b[1]]
+		}
+		it = d["itag"]
+		c["url" it] = d["url"]
+		c["fmt" it] = d["type"]
+		urls = urls " fmt" it " url" it
+	}
+#	if (!n) {
+#		print "OLD"
+#		n = split(c["fmt_stream_map"], u, ",")
+#		if (!n)
+#			n = split(c["fmt_url_map"], u, ",")
+#		for (i = 1; i <= n; i++) {
+#			split(u[i], ui, "|")
+#			urls = urls " url" ui[1]
+#			c["url" ui[1]] = ui[2]
+#		}
+#	}
+	n = split(c["fmt_list"], u, ",")
+	for (i = 1; i <= n; i++) {
+		k = split(u[i],a,/\//)
+		c["fmt" a[1]] = a[2] " " c["fmt" a[1]]
 	}
 	ok = 1
 }
@@ -115,16 +156,22 @@ function getvars() {
 	getvars()
 }
 #/var swfConfig = {/
-#/PLAYER_CONFIG/
+#/PLAYER_CONFIG.: {/ {
+#	sub(/.*PLAYER_CONFIG.: {/, "")
+#	sub(/}.*$/, "")
+#	sub(/\\/,"")
+#	split($0, a, /, /)
+#	getvars()
+#}
 END {
 	if (!ok) {
 		if (unsafe)
 			print "err\t(verify your age by signing in)"
 		exit 1
 	}
-	N = split("fmt" fmt " id t length title desc tags wide hd thumb thumbhq", a)
+#	N = split("fmt fmt_list " urls " id t length title desc tags wide hd thumb thumbhq list", a)
+	N = split(urls " id length title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
-	exit 0
 }'
-esac
+}

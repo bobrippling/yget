@@ -1,5 +1,11 @@
 yget (2.3.1-r60) unstable; urgency=low
 
+  * fix playlist more
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Thu, 04 Aug 2011 13:06:10 +0200
+
+yget (2.3.1-r60) unstable; urgency=low
+
   * fix playlist
 
  -- Szabolcs Nagy <nszabolcs@gmail.com>  Thu, 04 Aug 2011 13:02:10 +0200

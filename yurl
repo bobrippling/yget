@@ -25,10 +25,8 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 	wget "$PURL" -q -O- |awk '/data-video-ids/{
 		sub(/.*data-video-ids="/, "")
 		sub(/".*/, "")
-		n = split($0, a, ",")
-		for (i = 1; i <= n; i++)
-			printf "%03d http://www.youtube.com/watch?v=%s\n", i, a[i]
-		exit
+		n++
+		printf "%03d http://www.youtube.com/watch?v=%s\n", n, $0
 	}'
 }
 [ "$V" ] && {

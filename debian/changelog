@@ -1,3 +1,9 @@
+yget (2.3.0-r57) unstable; urgency=low
+
+  * bump version number after some cleanups
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Thu, 04 Aug 2011 12:35:51 +0200
+
 yget (2.2.3-r54) unstable; urgency=low
 
   * parse new youtube format (url_encoded_fmt_stream_map)

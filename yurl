@@ -28,6 +28,7 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 		n++
 		printf "%03d http://www.youtube.com/watch?v=%s\n", n, $0
 	}'
+	exit 0
 }
 [ "$V" ] && {
 	# video url

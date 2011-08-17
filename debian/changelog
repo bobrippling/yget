@@ -1,3 +1,9 @@
+yget (2.3.3-r67) unstable; urgency=low
+
+  * fix video id recognition (#p/u/.. and v/id;params)
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Thu, 17 Aug 2011 13:06:10 +0200
+
 yget (2.3.1-r60) unstable; urgency=low
 
   * fix playlist more

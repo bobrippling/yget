@@ -1,3 +1,9 @@
+yget (2.3.4-r70) unstable; urgency=low
+
+  * bit better seeking (large mplayer cache)
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Thu, 19 Aug 2011 09:06:10 +0200
+
 yget (2.3.3-r67) unstable; urgency=low
 
   * fix video id recognition (#p/u/.. and v/id;params)

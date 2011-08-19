@@ -1,5 +1,6 @@
 #!/bin/sh
 
+export LC_ALL=C
 [ $# -eq 1 ] || { echo "usage: $0 URL" 1>&2; exit 1; }
 V=$(echo "$1"|sed '
 	s|[^a-zA-Z0-9_-]|/|g
@@ -104,7 +105,7 @@ function getvars() {
 		sub(/^"/,"",b[2])
 		sub(/"$/,"",b[2])
 		c[b[1]] = unquote(b[2])
-#		print b[1],c[b[1]]
+#		print b[1],c[b[1]],b[2]
 	}
 	# fix keys
 	c["id"] = c["video_id"]

@@ -20,7 +20,11 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 [ "$V" ] || {
 	# playlist url
 	p=1
-	wget "$PURL" -q -O- |awk '/data-video-ids/{
+	wget "$PURL" -O- 2>&1 |awk '
+	NR<10 && /ERROR / {
+		print $0 >"/dev/stderr"
+	}
+	/data-video-ids/{
 		sub(/.*data-video-ids="/, "")
 		sub(/".*/, "")
 		n++
@@ -30,7 +34,7 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 }
 [ "$V" ] && {
 	# video url
-	wget "$VURL" -q -O- |awk -v pl=$P '
+	wget "$VURL" -O- 2>&1 |awk -v pl=$P '
 BEGIN {
 	for (i = 0; i < 256; i++)
 		tab[sprintf("%X", i)] = sprintf("%c", i)
@@ -69,6 +73,9 @@ function getmeta() {
 	gsub(/&quot;/, "\"")
 	gsub(/&amp;/, "\\&")
 	$0 = unquote2($0)
+}
+NR<10 && /ERROR / {
+	print $0 >"/dev/stderr"
 }
 /<meta name="title"/ {
 	getmeta()
@@ -165,11 +172,11 @@ function getvars() {
 END {
 	if (!ok) {
 		if (unsafe)
-			print "err\t(verify your age by signing in)"
+			print "err\t(verify your age by signing in)" >"/dev/stderr"
 		exit 1
 	}
 #	N = split("fmt fmt_list " urls " id t length title desc tags wide hd thumb thumbhq list", a)
-	N = split("fmts " urls " id date length title desc tags thumbhq list", a)
+	N = split("fmts " urls " id length date title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 }'

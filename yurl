@@ -82,6 +82,11 @@ function getmeta() {
 	getmeta()
 	c["keywords2"] = $0
 }
+/<span id="eow-date"/ {
+	sub(/.*"eow-date"[^>]*>/, "")
+	sub(/<.*/, "")
+	c["date"] = $0
+}
 /IS_WIDESCREEN/ {
 	strip()
 	c["wide"] = $0
@@ -164,7 +169,7 @@ END {
 		exit 1
 	}
 #	N = split("fmt fmt_list " urls " id t length title desc tags wide hd thumb thumbhq list", a)
-	N = split("fmts " urls " id length title desc tags thumbhq list", a)
+	N = split("fmts " urls " id date length title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 }'

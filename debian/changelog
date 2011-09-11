@@ -1,3 +1,10 @@
+yget (2.3.6-r79) unstable; urgency=low
+
+  * print upload date
+  * print http status in case of error
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Sun, 11 Sep 2011 02:40:54 +0200
+
 yget (2.3.5-r73) unstable; urgency=low
 
   * LC_ALL=C

@@ -20,8 +20,8 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 [ "$V" ] || {
 	# playlist url
 	p=1
-	wget "$PURL" -O- 2>&1 |awk '
-	NR<10 && /ERROR / {
+	wget -q --save-headers -O- "$PURL" |awk '
+	NR==1 && $0 !~ /200 OK/ {
 		print $0 >"/dev/stderr"
 	}
 	/data-video-ids/{
@@ -34,7 +34,7 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 }
 [ "$V" ] && {
 	# video url
-	wget "$VURL" -O- 2>&1 |awk -v pl=$P '
+	wget -q --save-headers -O- "$VURL" |awk -v pl=$P '
 BEGIN {
 	for (i = 0; i < 256; i++)
 		tab[sprintf("%X", i)] = sprintf("%c", i)
@@ -74,7 +74,7 @@ function getmeta() {
 	gsub(/&amp;/, "\\&")
 	$0 = unquote2($0)
 }
-NR<10 && /ERROR / {
+NR==1 && $0 !~ /200 OK/ {
 	print $0 >"/dev/stderr"
 }
 /<meta name="title"/ {

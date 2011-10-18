@@ -94,26 +94,41 @@ NR==1 && $0 !~ /200 OK/ {
 	sub(/<.*/, "")
 	c["date"] = $0
 }
-/IS_WIDESCREEN/ {
-	strip()
-	c["wide"] = $0
-}
-/IS_HD_AVAILABLE/ {
-	strip()
-	c["hd"] = $0
-}
 /verify-age/ {
 	unsafe=1
 }
 function getvars() {
 	for (i in a) {
-		split(a[i], b, /[:=] ?/)
+		split(a[i], b, /": ?/)
 		sub(/^"/,"",b[1])
 		sub(/"$/,"",b[1])
 		sub(/^"/,"",b[2])
 		sub(/"$/,"",b[2])
-		c[b[1]] = unquote(b[2])
-#		print b[1],c[b[1]],b[2]
+		qc[b[1]] = b[2]
+#		print b[1],qc[b[1]],b[2]
+	}
+	n = split(qc["url_encoded_fmt_stream_map"], u, /,/)
+	for (i = 1; i <= n; i++) {
+		k = split(u[i],a,/\\u0026/)
+		for (j in a) {
+			split(a[j], b, /=/)
+			sub(/"/, "", b[2])
+			d[b[1]] = b[2]
+#			print i,b[1],d[b[1]]
+		}
+		it = d["itag"]
+		qc["url" it] = d["url"]
+		qc["fmt" it] = d["type"]
+		urls = urls " fmt" it " url" it
+		qc["fmts"] = qc["fmts"] it " "
+	}
+	n = split(qc["fmt_list"], u, /,/)
+	for (i = 1; i <= n; i++) {
+		split(u[i],a,/\//)
+		qc["fmt" a[1]] = a[2] " " qc["fmt" a[1]]
+	}
+	for (i in qc) {
+		c[i] = unquote(qc[i])
 	}
 	# fix keys
 	c["id"] = c["video_id"]
@@ -121,61 +136,25 @@ function getvars() {
 #	c["tags"] = c["keywords2"]
 	c["tags"] = c["keywords"]
 #	gsub(/=/, "%3D", c["t"])
-#	c["url"] = "http://www.youtube.com/get_video?video_id=" c["video_id"] "&t=" c["t"]
 	c["thumb"] = "http://i.ytimg.com/vi/" c["video_id"] "/default.jpg"
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
 	c["list"] = pl
 
-	n = split(c["url_encoded_fmt_stream_map"], u, ",")
-	for (i = 1; i <= n; i++) {
-		k = split(u[i],a,/&/)
-		for (j in a) {
-			split(a[j], b, /=/)
-			sub(/"/, "", b[2])
-			d[b[1]] = unquote(b[2])
-#			print i,b[1],d[b[1]]
-		}
-		it = d["itag"]
-		c["url" it] = d["url"]
-		c["fmt" it] = d["type"]
-		urls = urls " fmt" it " url" it
-		c["fmts"] = c["fmts"] it " "
-	}
-	n = split(c["fmt_list"], u, ",")
-	for (i = 1; i <= n; i++) {
-		k = split(u[i],a,/\//)
-		c["fmt" a[1]] = a[2] " " c["fmt" a[1]]
-	}
 	ok = 1
 }
-/flashvars="/ {
-	sub(/^.*flashvars="/, "")
-	sub(/".*$/, "")
-	split($0, a, /&amp;/)
-	getvars()
-}
-/SWF_ARGS/ {
-	sub(/^.*{/, "")
+/PLAYER_CONFIG.: {/ {
+	sub(/.*args.: ?{/, "")
 	sub(/}.*$/, "")
-	gsub(/"/, "")
+	gsub(/\\\//,"/")
 	split($0, a, /, /)
 	getvars()
 }
-#/var swfConfig = {/
-#/PLAYER_CONFIG.: {/ {
-#	sub(/.*PLAYER_CONFIG.: {/, "")
-#	sub(/}.*$/, "")
-#	sub(/\\/,"")
-#	split($0, a, /, /)
-#	getvars()
-#}
 END {
 	if (!ok) {
 		if (unsafe)
 			print "err\t(verify your age by signing in)" >"/dev/stderr"
 		exit 1
 	}
-#	N = split("fmt fmt_list " urls " id t length title desc tags wide hd thumb thumbhq list", a)
 	N = split("fmts " urls " id length date title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]

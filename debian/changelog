@@ -1,3 +1,9 @@
+yget (2.4.0-r82) unstable; urgency=low
+
+  * use PLAYER_CONFIG json instead of flashvars
+
+ -- Szabolcs Nagy <nszabolcs@gmail.com>  Tue, 18 Oct 2011 19:52:26 +0200
+
 yget (2.3.6-r79) unstable; urgency=low
 
   * print upload date

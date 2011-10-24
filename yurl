@@ -1,5 +1,11 @@
 #!/bin/sh
 
+get() {
+	curl -s -i "$1"
+# wget only emits headers in case of OK status
+#	wget -q --save-headers -O- "$1"
+}
+
 export LC_ALL=C
 [ $# -eq 1 ] || { echo "usage: $0 URL" 1>&2; exit 1; }
 V=$(echo "$1"|sed -n '
@@ -19,8 +25,7 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 [ "$P" ] || [ "$V" ] || { echo 'no video id or playlist id found' 1>&2; exit 1; }
 [ "$V" ] || {
 	# playlist url
-	p=1
-	wget -q --save-headers -O- "$PURL" |awk '
+	get "$PURL" |awk '
 	NR==1 && $0 !~ /200 OK/ {
 		print $0 >"/dev/stderr"
 	}
@@ -34,7 +39,7 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 }
 [ "$V" ] && {
 	# video url
-	wget -q --save-headers -O- "$VURL" |awk -v pl=$P '
+	get "$VURL" |awk -v pl=$P '
 BEGIN {
 	for (i = 0; i < 256; i++)
 		tab[sprintf("%X", i)] = sprintf("%c", i)
@@ -62,10 +67,6 @@ function unquote2(s, i,n,x,t) {
 			s = s "&#" t[i]
 	}
 	return s
-}
-function strip() {
-	sub(/^[^:]*: '\''?/, "")
-	sub(/'\''?,$/, "")
 }
 function getmeta() {
 	sub(/^.*content="/, "")
@@ -135,7 +136,6 @@ function getvars() {
 	c["length"] = c["length_seconds"]
 #	c["tags"] = c["keywords2"]
 	c["tags"] = c["keywords"]
-#	gsub(/=/, "%3D", c["t"])
 	c["thumb"] = "http://i.ytimg.com/vi/" c["video_id"] "/default.jpg"
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
 	c["list"] = pl

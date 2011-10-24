@@ -5,7 +5,7 @@ Maintainer: Tibor Palinkas <yget@inno.bme.hu>
 
 Package: yget
 Architecture: all
-Depends: wget
+Depends: curl
 Description: youtube video downloader
  This software downloads a video from youtube using its url, saving
  the user the hassle to use flash.

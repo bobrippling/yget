@@ -2,6 +2,9 @@
 
 get() {
 	curl -s -i "$1"
+#	# debug
+#	mkdir -p $HOME/.yget
+#	curl -s -i "$1" |tee $HOME/.yget/y$V$P
 # wget only emits headers in case of OK status
 #	wget -q --save-headers -O- "$1"
 }

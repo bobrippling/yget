@@ -23,18 +23,21 @@ NAME
 
 
 SYNOPSIS
-       yget URL [prefix]
-       yplay URL
+       yget URL [-hq|-fmt fmtlist|-prefix prefix]
+       yplay URL [-hq|-fmt fmtlist]
        yurl URL
 
 
 DESCRIPTION
-       yget  saves  the  video  of  the given youtube URL. The filename is the
-       video id with the given prefix. The default prefix is "y". If  the  URL
-       points  to a playlist then yget will download all videos in it and save
-       them with prefix "y[number]_".  If the  filename  already  exists  then
-       yget  assumes  that  the  video is unfinished and tries to continue the
-       download.
+       yget  saves the video of the given youtube URL. The filename is created
+       from the given prefix, an ascii name and the video id. The default pre-
+       fix  is  "y_".  If the URL points to a playlist then yget will download
+       all videos in it and save them with prefix "y[number]_".  If the  file-
+       name  already exists then yget assumes that the video is unfinished and
+       tries to continue the download.
+
+       Higher quality video format can be selected by -hq and -fmt  allows  to
+       select the format directly.
 
        yplay streams the video of the given youtube URL.
 
@@ -55,9 +58,10 @@ NOTES
        be escaped in the shell. Internally these parameters are dropped,  only
        the video or playlist id is used.
 
-       yget  and  yplay  try to get a 640x360 resolution H.264 encoded version
-       (fmt=34).  For other versions see the download url## from yurl  (possi-
-       ble fmt parameters are 5 6 13 17 18 22 34 35 37 38 43 45)
+       yget and yplay try to get a 640x360 resolution  H.264  encoded  version
+       (fmt=34).   For  other versions see the download url## from yurl or use
+       -fmt.  (possible fmt parameters are 5 6 13 17 18 22 34 35 36 37  43  45
+       82 84 100 102)
 
        Any recent mplayer or vlc should be able to stream the video  from  the
        urls  printed  by  yurl.   Seeking in the stream might not work.  yplay

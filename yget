@@ -8,9 +8,9 @@ url=
 
 usage() {
 	echo "usage: $cmd [-hq|-fmt fmtlist|-prefix prefix] URL" 1>&2
-	echo "  -hq     - high quality, equivalent to -fmt '$hqfmts'"
-	echo "  -fmt    - format preference, default: '$fmts'"
-	echo "  -prefix - $prefix"
+	echo "  -hq     - high quality, equivalent to -fmt '$hqfmts'" 1>&2
+	echo "  -fmt    - format preference, default: '$fmts'" 1>&2
+	echo "  -prefix - $prefix" 1>&2
 	exit 1
 }
 
@@ -58,7 +58,7 @@ function fix() {
 }
 list {
 	sub(/&.*/, "")
-	system(cmd " " $2 " -prefix " prefix $1 "_ -fmt '\''" fmts "'\''")
+	system(cmd " " $2 " -prefix y" $1 "_ -fmt '\''" fmts "'\''")
 }
 END {
 	n = split(fmts, a)
@@ -71,5 +71,5 @@ END {
 	if (!e)
 		e = ".flv"
 	if (u)
-		system("wget -c -O " prefix name "_"  id e " '\''" u "'\''")
+		system("wget -c -O " prefix "_" name "_"  id e " '\''" u "'\''")
 }'

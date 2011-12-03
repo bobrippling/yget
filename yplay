@@ -1,29 +1,53 @@
 #!/bin/sh
 
-[ $# -eq 1 ] || { echo "usage: $0 URL"; exit 1; }
+fmts="34 18 5 6 13 17 18 22 34 35 36 37 43 45 82 84 100 102"
+hqfmts="22 35 37 34"
+url=
 
-yurl "$1" |awk '
+usage() {
+	echo "usage: $0 [-hq|-fmt fmtlist] URL" 1>&2
+	echo "  -hq     - high quality, equivalent to -fmt '$hqfmts'" 1>&2
+	echo "  -fmt    - format preference, default: '$fmts'" 1>&2
+	exit 1
+}
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+	-hq ) fmts="$hqfmts"; shift 1;;
+	-fmt ) fmts="$2"; shift 2;;
+	* ) url="$1"; shift 1;;
+	esac
+done
+[ "x$url" != "x" ] || usage
+
+yurl "$url" |awk -v fmts="$fmts" '
 function fix() {
 	gsub("'\''","")
 }
-/^url34/ {
-	fix()
-	url=$2
+/^00/ {
+	print "playlist is not supported" >"/dev/stderr"
+	exit 1
 }
-/^url5/ && !url {
+/^url/ {
 	fix()
-	url=$2
+	sub(/url/, "")
+	url[$1] = $2
 }
 /^title/ {
 	fix()
 	sub(/^title[ \t]*/,"")
-	title="MPlayer - " $0
+	t="MPlayer - " $0
 }
 {
 	print
 }
-
 END {
-if (url)
-	system("mplayer -prefer-ipv4 -cache 32768 -cache-min 1 -cache-seek-min 10 -title '\''" title "'\'' '\''" url "'\''")
+	n = split(fmts, a)
+	for (i = 1; i <= n; i++)
+		if (url[a[i]]) {
+			u = url[a[i]]
+			break
+		}
+	if (u)
+		system("mplayer -cache 32768 -cache-min 1 -cache-seek-min 10 -title '\''" t "'\'' '\''" u "'\''")
 }'

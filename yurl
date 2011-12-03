@@ -80,9 +80,10 @@ function getmeta() {
 }
 function clean(s) {
 	s = tolower(s)
-	gsub(/[^a-z0-9.+%:-]/, "_", s)
-	if (s ~ /^-/)
-		s = "_" s
+	gsub(/[({]/, "[", s)
+	gsub(/[)}]/, "]", s)
+	gsub(/[^a-z0-9.+%:\[\]\-]/, "_", s)
+	gsub(/__*/, "_", s)
 	return s
 }
 NR==1 && $0 !~ /200 OK/ {

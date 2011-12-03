@@ -78,6 +78,13 @@ function getmeta() {
 	gsub(/&amp;/, "\\&")
 	$0 = unquote2($0)
 }
+function clean(s) {
+	s = tolower(s)
+	gsub(/[^a-z0-9.+%:-]/, "_", s)
+	if (s ~ /^-/)
+		s = "_" s
+	return s
+}
 NR==1 && $0 !~ /200 OK/ {
 	print $0 >"/dev/stderr"
 }
@@ -142,6 +149,7 @@ function getvars() {
 	c["thumb"] = "http://i.ytimg.com/vi/" c["video_id"] "/default.jpg"
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
 	c["list"] = pl
+	c["name"] = clean(c["title"])
 
 	ok = 1
 }
@@ -158,7 +166,7 @@ END {
 			print "err\t(verify your age by signing in)" >"/dev/stderr"
 		exit 1
 	}
-	N = split("fmts " urls " id length date title desc tags thumbhq list", a)
+	N = split("fmts " urls " id name length date title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 }'

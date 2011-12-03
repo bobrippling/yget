@@ -1,15 +1,75 @@
 #!/bin/sh
-# TODO: fmt = 5 6 13 17 18 22 34 35 36 37 43 45
-[ $# -gt 0 ] || { echo "usage: $0 URL [prefix=y]"; exit 1; }
-[ $# -eq 2 ] || set -- "$1" y
-yurl "$1" |awk -v prefix="$2" -v cmd="$0" '
-/^00/ {list = 1}
-/^url34/ {gsub("'\''",""); url=$2}
-/^url5/ && !url {gsub("'\''",""); url=$2}
-/^id/ {id=$2}
-{print}
-list { sub(/&.*/, ""); system(cmd " " $2 " " prefix $1 "_" ) }
+
+fmts="34 18 5 6 13 17 18 22 34 35 36 37 43 45 82 84 100 102"
+hqfmts="22 35 37 34"
+prefix="y_"
+cmd="$0"
+url=
+
+usage() {
+	echo "usage: $cmd [-hq|-fmt fmtlist|-prefix prefix] URL" 1>&2
+	echo "  -hq     - high quality, equivalent to -fmt '$hqfmts'"
+	echo "  -fmt    - format preference, default: '$fmts'"
+	echo "  -prefix - $prefix"
+	exit 1
+}
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+	-hq ) fmts="$hqfmts"; shift 1;;
+	-fmt ) fmts="$2"; shift 2;;
+	-prefix ) prefix="$2"; shift 2;;
+	* ) url="$1"; shift 1;;
+	esac
+done
+[ "x$url" != "x" ] || usage
+
+yurl "$url" |awk -v prefix="$prefix" -v cmd="$cmd" -v fmts="$fmts" '
+function fix() {
+	gsub("'\''","")
+}
+/^00/ {
+	list = 1
+}
+/^fmt/ {
+	sub(/fmt/, "")
+	if ($3 ~ /x-flv/)
+		ext[$1] = ".flv"
+	if ($3 ~ /mp4/)
+		ext[$1] = ".mp4"
+	if ($3 ~ /webm/)
+		ext[$1] = ".webm"
+}
+/^url/ {
+	fix()
+	sub(/url/, "")
+	url[$1] = $2
+}
+/^id/ {
+	fix()
+	id=$2
+}
+/^name/ {
+	fix()
+	name=$2
+}
+{
+	print
+}
+list {
+	sub(/&.*/, "")
+	system(cmd " " $2 " -prefix " prefix $1 "_ -fmt '\''" fmts "'\''")
+}
 END {
-	if (url)
-		system("wget -c -O " prefix id ".flv '\''" url "'\''")
+	n = split(fmts, a)
+	for (i = 1; i <= n; i++)
+		if (url[a[i]])
+			break
+	f = a[i]
+	u = url[f]
+	e = ext[f]
+	if (!e)
+		e = ".flv"
+	if (u)
+		system("wget -c -O " prefix name "_"  id e " '\''" u "'\''")
 }'

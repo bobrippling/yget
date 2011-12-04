@@ -28,6 +28,9 @@ function fix() {
 	print "playlist is not supported" >"/dev/stderr"
 	exit 1
 }
+{
+	print
+}
 /^url/ {
 	fix()
 	sub(/url/, "")
@@ -37,9 +40,6 @@ function fix() {
 	fix()
 	sub(/^title[ \t]*/,"")
 	t="MPlayer - " $0
-}
-{
-	print
 }
 END {
 	n = split(fmts, a)

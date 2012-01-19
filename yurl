@@ -23,7 +23,7 @@ P=$(echo "$1"|sed -n '
 	s|^P*L*\(................\)$|/p/\1|
 	s|/list/P*L*\(................\)$|/p/\1|
 	s|.*/p/\([^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/]\).*|\1|p')
-VURL="http://www.youtube.com/watch?v=$V"
+VURL="http://www.youtube.com/watch?v=$V&hl=en"
 PURL="http://www.youtube.com/view_play_list?p=$P"
 [ "$P" ] || [ "$V" ] || { echo 'no video id or playlist id found' 1>&2; exit 1; }
 [ "$V" ] || {
@@ -112,18 +112,9 @@ NR==1 && $0 !~ /200 OK/ {
 	unsafe=1
 }
 function getvars() {
-	for (i in a) {
-		split(a[i], b, /": ?/)
-		sub(/^"/,"",b[1])
-		sub(/"$/,"",b[1])
-		sub(/^"/,"",b[2])
-		sub(/"$/,"",b[2])
-		qc[b[1]] = b[2]
-#		print b[1],qc[b[1]],b[2]
-	}
-	n = split(qc["url_encoded_fmt_stream_map"], u, /,/)
+	n = split(map["url_encoded_fmt_stream_map"], u, /,/)
 	for (i = 1; i <= n; i++) {
-		k = split(u[i],a,/\\u0026/)
+		k = split(u[i],a,/\\u0026|&/)
 		for (j in a) {
 			split(a[j], b, /=/)
 			sub(/"/, "", b[2])
@@ -131,18 +122,18 @@ function getvars() {
 #			print i,b[1],d[b[1]]
 		}
 		it = d["itag"]
-		qc["url" it] = d["url"]
-		qc["fmt" it] = d["type"]
+		map["url" it] = d["url"]
+		map["fmt" it] = d["type"]
 		urls = urls " fmt" it " url" it
-		qc["fmts"] = qc["fmts"] it " "
+		map["fmts"] = map["fmts"] it " "
 	}
-	n = split(qc["fmt_list"], u, /,/)
+	n = split(map["fmt_list"], u, /,/)
 	for (i = 1; i <= n; i++) {
 		split(u[i],a,/\//)
-		qc["fmt" a[1]] = a[2] " " qc["fmt" a[1]]
+		map["fmt" a[1]] = a[2] " " map["fmt" a[1]]
 	}
-	for (i in qc) {
-		c[i] = unquote(qc[i])
+	for (i in map) {
+		c[i] = unquote(map[i])
 	}
 	# fix keys
 	c["id"] = c["video_id"]
@@ -153,14 +144,35 @@ function getvars() {
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
 	c["list"] = pl
 	c["name"] = clean(c["title"])
-
+	gsub(/\\u0026/, "\\&", c["ttsurl"])
 	ok = 1
 }
+/flashvars="/ {
+	sub(/^.*flashvars="/, "")
+	sub(/".*$/, "")
+	split($0, a, /&amp;/)
+	for (i in a) {
+		split(a[i], b, /=/)
+		map[b[1]] = unquote(b[2])
+#		print b[1],map[b[1]],b[2]
+	}
+	getvars()
+}
+# old way
 /PLAYER_CONFIG.: {/ {
 	sub(/.*args.: ?{/, "")
 	sub(/}.*$/, "")
 	gsub(/\\\//,"/")
 	split($0, a, /, /)
+	for (i in a) {
+		split(a[i], b, /": ?/)
+		sub(/^"/,"",b[1])
+		sub(/"$/,"",b[1])
+		sub(/^"/,"",b[2])
+		sub(/"$/,"",b[2])
+		map[b[1]] = b[2]
+#		print b[1],map[b[1]],b[2]
+	}
 	getvars()
 }
 END {

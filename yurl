@@ -1,10 +1,10 @@
 #!/bin/sh
 
 get() {
-	curl -s -i "$1"
+	curl -L -s -i "$1"
 #	# debug
 #	mkdir -p $HOME/.yget
-#	curl -s -i "$1" |tee $HOME/.yget/y$V$P
+#	curl -L -s -i "$1" |tee $HOME/.yget/y$V$P
 # wget only emits headers in case of OK status
 #	wget -q --save-headers -O- "$1"
 }
@@ -89,6 +89,10 @@ function clean(s) {
 	return s
 }
 NR==1 && $0 !~ /200 OK/ {
+	status = $2
+	print $0 >"/dev/stderr"
+}
+status ~ /30./ && /^Location:/ {
 	print $0 >"/dev/stderr"
 }
 /<meta name="title"/ {
@@ -108,7 +112,7 @@ NR==1 && $0 !~ /200 OK/ {
 	sub(/<.*/, "")
 	c["date"] = $0
 }
-/verify-age/ {
+/verify[_-]age/ {
 	unsafe=1
 }
 function getvars() {

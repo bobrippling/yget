@@ -1,3 +1,9 @@
+yget (2.5.2-r98) unstable; urgency=low
+
+  * show view count
+
+ -- Szabolcs Nagy <nsz@port70.net>  Tue, 24 Jan 2012 21:17:44 +0100
+
 yget (2.5.1-r95) unstable; urgency=low
 
   * verify age fix

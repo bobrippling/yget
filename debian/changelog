@@ -1,3 +1,9 @@
+yget (2.5.3-r101) unstable; urgency=low
+
+  * flashvars format change
+
+ -- Szabolcs Nagy <nsz@port70.net>  Thu Jan 26 12:34:43 CET 2012
+
 yget (2.5.2-r98) unstable; urgency=low
 
   * show view count

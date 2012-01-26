@@ -157,10 +157,10 @@ function getvars() {
 	gsub(/\\u0026/, "\\&", c["ttsurl"])
 	ok = 1
 }
-/flashvars="/ {
-	sub(/^.*flashvars="/, "")
-	sub(/".*$/, "")
-	split($0, a, /&amp;/)
+/flashvars=\\"/ {
+	sub(/^.*flashvars=\\"/, "")
+	sub(/\\".*$/, "")
+	split($0, a, /\\u0026amp;/)
 	for (i in a) {
 		split(a[i], b, /=/)
 		map[b[1]] = unquote(b[2])

@@ -24,8 +24,6 @@ P=$(echo "$1"|sed -n '
 	s|/list/|/p/|
 	s|/PL|/|
 	s|.*/p/\([^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/]\).*|\1|p')
-echo $P
-exit 1
 VURL="http://www.youtube.com/watch?v=$V&hl=en"
 PURL="http://www.youtube.com/view_play_list?p=$P"
 [ "$P" ] || [ "$V" ] || { echo 'no video id or playlist id found' 1>&2; exit 1; }

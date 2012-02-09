@@ -20,9 +20,12 @@ V=$(echo "$1"|sed -n '
 	s|.*/v/\([^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/]\).*|\1|p')
 P=$(echo "$1"|sed -n '
 	s|[^a-zA-Z0-9_-]|/|g
-	s|^P*L*\(................\)$|/p/\1|
-	s|/list/P*L*\(................\)$|/p/\1|
+	s|^|/|
+	s|/list/|/p/|
+	s|/PL|/|
 	s|.*/p/\([^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/]\).*|\1|p')
+echo $P
+exit 1
 VURL="http://www.youtube.com/watch?v=$V&hl=en"
 PURL="http://www.youtube.com/view_play_list?p=$P"
 [ "$P" ] || [ "$V" ] || { echo 'no video id or playlist id found' 1>&2; exit 1; }

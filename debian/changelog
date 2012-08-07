@@ -1,3 +1,10 @@
+yget (2.5.4-r106) unstable; urgency=low
+
+  * fix playlist parsing
+  * use curl only
+
+ -- Szabolcs Nagy <nsz@port70.net>  Thu Jan 26 12:34:43 CET 2012
+
 yget (2.5.3-r101) unstable; urgency=low
 
   * flashvars format change

@@ -71,5 +71,5 @@ END {
 	if (!e)
 		e = ".flv"
 	if (u)
-		system("wget -c -O " prefix name "_"  id e " '\''" u "'\''")
+		system("curl -C - -o " prefix name "_"  id e " '\''" u "'\''")
 }'

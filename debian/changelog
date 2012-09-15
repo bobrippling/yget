@@ -1,3 +1,9 @@
+yget (2.5.5-r108) unstable; urgency=low
+
+  * fix yurl to handle new youtube url format
+
+ -- Szabolcs Nagy <nsz@port70.net>  Sat, 15 Sep 2012 21:36:09 +0200
+
 yget (2.5.4-r106) unstable; urgency=low
 
   * fix playlist parsing

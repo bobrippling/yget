@@ -133,7 +133,7 @@ function getvars() {
 #			print i,b[1],d[b[1]]
 		}
 		it = d["itag"]
-		map["url" it] = d["url"]
+		map["url" it] = d["url"] "&signature=" d["sig"]
 		map["fmt" it] = d["type"]
 		urls = urls " fmt" it " url" it
 		map["fmts"] = map["fmts"] it " "

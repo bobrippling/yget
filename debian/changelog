@@ -1,3 +1,10 @@
+yget (2.5.6-r113) unstable; urgency=low
+
+  * fix playlist handling
+  * fix fmts in yget and yplay
+
+ -- Szabolcs Nagy <nsz@port70.net>  Sat, 18 Sep 2012 10:00:09 +0200
+
 yget (2.5.5-r108) unstable; urgency=low
 
   * fix yurl to handle new youtube url format

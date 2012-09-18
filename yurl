@@ -22,7 +22,7 @@ P=$(echo "$1"|sed -n '
 	s|[^a-zA-Z0-9_-]|/|g
 	s|^|/|
 	s|/list/|/p/|
-	s|/PL|/|
+	s|/PL|/p/|
 	s|.*/p/\([^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/]\).*|\1|p')
 VURL="http://www.youtube.com/watch?v=$V&hl=en"
 PURL="http://www.youtube.com/view_play_list?p=$P"

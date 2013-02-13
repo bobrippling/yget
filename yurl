@@ -113,10 +113,21 @@ status ~ /30./ && /^Location:/ {
 	sub(/<.*/, "")
 	c["date"] = $0
 }
+/span class="likes-count"/ {
+	sub(/.*"> */, "")
+	sub(/<.*/, "")
+	c["likes"] = $0
+}
+/span class="dislikes-count"/ {
+	sub(/.*"> */, "")
+	sub(/<.*/, "")
+	c["dislikes"] = $0
+}
 /class="watch-view-count"/ {
 	getline
 	sub(/.*<strong>/, "")
 	sub(/<.*/, "")
+	sub(/^ */, "")
 	c["views"] = $0
 }
 /verify[_-]age/ {
@@ -158,6 +169,7 @@ function getvars() {
 	gsub(/\\u0026/, "\\&", c["ttsurl"])
 	ok = 1
 }
+# old way
 /flashvars=\\"/ {
 	sub(/^.*flashvars=\\"/, "")
 	sub(/\\".*$/, "")
@@ -169,20 +181,21 @@ function getvars() {
 	}
 	getvars()
 }
-# old way
-/PLAYER_CONFIG.: {/ {
-	sub(/.*args.: ?{/, "")
-	sub(/}.*$/, "")
-	gsub(/\\\//,"/")
-	split($0, a, /, /)
-	for (i in a) {
+/"url_encoded_fmt_stream_map"/ {
+	sub(/^[^{]*{/, "")
+	sub(/};.*$/, "")
+	gsub(/\\\//, "/")
+	gsub(/}/,"")
+	gsub(/: *{/,": {}, ")
+	n=split($0, a, /, /)
+	for (i=1; i<=n; i++) {
 		split(a[i], b, /": ?/)
 		sub(/^"/,"",b[1])
 		sub(/"$/,"",b[1])
 		sub(/^"/,"",b[2])
 		sub(/"$/,"",b[2])
 		map[b[1]] = b[2]
-#		print b[1],map[b[1]],b[2]
+#		print b[1],b[2]
 	}
 	getvars()
 }

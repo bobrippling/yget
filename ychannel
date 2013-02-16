@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+use warnings;
+
+die "Usage: $0 channel-name\n" unless @ARGV == 1;
+
+my $name = shift;
+
+for(my $page = 1; ; $page++){
+	my $chan_url = "http://www.youtube.com/user/$name/videos?sort=dd&flow=grid&view=0&page=$page";
+	my $did_one = 0;
+
+	open PIPE, "wget -qO- '$chan_url' |" or die;
+
+	my $title;
+	while(<PIPE>){
+		chomp;
+
+		if($title){
+			# looking for a title
+			if(m;<a href="/watch\?v=([^&]+);){
+				print "$1 $title\n";
+				$title = undef;
+				$did_one = 1;
+			}
+
+			# else looking for a url
+		}elsif(m;data-context-item-title="([^"]+)";){
+			$title = $1;
+
+		}
+	}
+
+	last unless $did_one;
+}

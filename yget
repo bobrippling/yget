@@ -84,5 +84,7 @@ END {
 	if (lang && ttsurl)
 		system("curl -L '\''" ttsurl "'\'' | ysubfix >" n "." lang ".srt")
 	if (u)
-		system("curl -L -C - -o " n " '\''" u "'\''")
+		exit(system("curl -L -C - -o " n " '\''" u "'\''")
+	else
+		exit(1)
 }'

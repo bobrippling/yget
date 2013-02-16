@@ -1,5 +1,7 @@
 #!/bin/sh
 
+COOKIE_JAR="$HOME/.yget.cookies"
+
 debug() {
 	if [ -n "$YGET_DEBUG" ]
 	then
@@ -12,7 +14,7 @@ debug() {
 
 get() {
 #	[ -e $HOME/.yget/y$V$P.html ] && cat $HOME/.yget/y$V$P.html || {
-	curl -L -s -i "$1" |debug $HOME/.yget/y$V$P.html
+	curl -c "$COOKIE_JAR" -L -s -i "$1" |debug $HOME/.yget/y$V$P.html
 #	}
 # wget only emits headers in case of OK status
 #	wget -q --save-headers -O- "$1"

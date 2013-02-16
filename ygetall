@@ -1,0 +1,97 @@
+#!/usr/bin/perl
+use warnings;
+
+use constant
+{
+	MAX_CHILD => 3
+};
+
+sub exit_early
+{
+	$run = 0;
+}
+$SIG{USR1} = \&exit_early;
+
+$run = 1;
+%children = ();
+@errs     = ();
+
+sub waitchild
+{
+retry:
+	my $pid = wait();
+	my $r = $?;
+	my $link = $children{$pid};
+
+	if($pid == -1){
+		die "pid -1 for wait() ($!)";
+	}
+
+	goto retry unless defined $link; # could be that we've just reaped the <P> process
+
+	push @errs, { eno => $r, link => $link } if $r;
+
+	delete $children{$pid};
+
+	push @done, { pid => $pid, ret => $r, link => $link };
+}
+
+sub forkoff
+{
+	my $link = shift;
+
+	if((keys %children) > MAX_CHILD){
+		print "waiting for child to finish...\n";
+		waitchild();
+	}
+
+	if((my $pid = fork()) == 0){
+		exec 'yget', $link;
+		#exec 'clive', '-ffmt44_480p', $link;
+		die;
+	}else{
+		$children{$pid} = $link;
+	}
+}
+
+sub usage
+{
+	die "Usage: $0 [-f]\n";
+}
+
+my $filter = 1;
+
+if(@ARGV == 1){
+	if($ARGV[0] eq '-f'){
+		$filter = 0;
+	}else{
+		usage();
+	}
+}elsif(@ARGV != 0){
+	usage();
+}
+
+
+open P, '-|', ($filter ? 'xurls' : 'cat') or die "pipe: $!\n";
+
+while(<P>){
+	chomp;
+	if(!$run){
+		print STDERR "$0: exiting early, stopped before $_\n";
+		last;
+	}
+	print "$_\n";
+	forkoff($_);
+}
+
+close P;
+
+while(keys %children){
+	waitchild();
+}
+
+warn "$0: error $_->{eno} downloading $_->{link}\n" for @errs;
+
+print "$_->{link} = $_->{ret}\n" for @done;
+
+exit(!!@errs || !$run);

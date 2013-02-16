@@ -1,0 +1,51 @@
+#!/bin/sh
+
+usage(){
+	echo "Usage: $0 [-q] link"
+	exit 1
+}
+
+quiet=0
+
+if [ "$1" = '-q' ]
+then
+	quiet=1
+	shift
+fi
+
+if [ $# -ne 1 ]
+then usage
+fi
+
+IFS=$'\n'
+id_regex='a-zA-Z0-9_-'
+
+set -e
+
+
+if [ $quiet -ne 0 ]
+then exec > /dev/null 2>&1
+fi
+
+
+title="`yurl "$1" | grep title | sed 's/title\s*\(.*\)/\1/' | urldecode | sed 's#/#_#g'`"
+id="`   echo "$1" | sed "s#.*?v=\([$id_regex]\+\).*#\1#"`"
+
+info(){
+	printf "\e[1;34m%s\e[m\n" "$@"
+}
+
+if [ -z "$title" ]
+then
+	if yurl "$1" | grep verify\ your\ age > /dev/null
+	then echo "$0: need age verification" >&2
+	else echo "$0: no title for \"$1\"" >&2
+	fi
+	exit 1
+else
+	info "saving $1 to $title"
+	yget "$1" || exit $?
+	new="$title.flv"
+	mv -i "y$id.flv" "$new"
+	[ $? -eq 0 -a -f "$new" ] && info "moved to $new"
+fi

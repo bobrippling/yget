@@ -1,0 +1,68 @@
+#!/usr/bin/perl
+use warnings;
+
+sub usage
+{
+	print STDERR "Usage: $0 [-v] [-N] query\n";
+	exit 1;
+}
+
+my $n = 0; # unlimited
+my $q = '';
+my $verbose = 0;
+
+for(@ARGV){
+	if($_ eq '-v'){
+		$verbose = 1;
+	}elsif(/^-([0-9]+)$/){
+		$n = $1;
+	}elsif(length($q) == 0){
+		$q = $_;
+	}else{
+		usage()
+	}
+}
+
+usage() unless length $q;
+
+sub tag_attrs
+{
+	my $t = shift;
+	my %attr;
+
+	$attr{$1} = $2 while $t =~ s/([a-z-]+)="([^"]+)"//;
+
+	return %attr;
+}
+
+my $cmd = "wget --user-agent=Firefox -qO- 'http://www.youtube.com/results?search_query=$q'";
+
+open PIPE, '-|', $cmd or die "wget pipe";
+
+my $adverts = 1;
+
+while(<PIPE>){
+	chomp;
+
+	if($adverts){
+		$adverts = 0 if /<ol id="search-results"/;
+		next;
+	}
+
+	if(/yt-lockup2-video/){
+		chomp(my $next = <PIPE>);
+		my $full = $_ . $next;
+
+		my %attrs = tag_attrs($full);
+
+		if($attrs{href} and $attrs{href} !~ /redirect/){
+			print "http://youtube.com$attrs{href}"
+			. ($verbose ? " $attrs{'data-context-item-title'}" : "")
+			. "\n";
+
+			last if --$n == 0;
+		}
+	}
+}
+
+close PIPE;

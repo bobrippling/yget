@@ -1,0 +1,48 @@
+#!/bin/sh
+
+err(){
+	echo $@ >&2
+}
+
+bname="`basename $0`"
+
+if [ "$bname" = 'yfuzzydl' ]
+then
+	cmd='ydl'
+elif [ "$bname" = 'yfuzzyplay' ]
+then
+	cmd='yplay'
+elif [ "$bname" = 'yfuzzyget' ]
+then
+	cmd='yget'
+else
+	err "$0: Unknown program mode ($bname)"
+	exit 1
+fi
+
+if [ "$cmd" = 'yplay' ]
+then
+	if [ $# -eq 2 ]
+	then
+		mplayer_args=$1
+		shift
+	fi
+fi
+
+if [ $# -ne 1 ]
+then
+	err "Usage: $0 search"
+	exit 1
+fi
+
+for i in `seq 1 $#`
+do
+	arg=`eval 'echo \$'$i`
+	link="`ysearch "$arg"`"
+	if [ -z "$link" ]
+	then
+		err "$0: ysearch: Couldn't find $arg"
+	else
+		"$cmd" $mplayer_args "$link"
+	fi
+done

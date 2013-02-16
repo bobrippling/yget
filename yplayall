@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+use warnings;
+
+my %seen;
+
+for(;;){
+	my @f = grep { ! exists $seen{$_} } glob '*.flv';
+
+	unless(@f){
+		print "$0: no more files\n";
+		last;
+	}
+
+	system("mplayer", @ARGV, @f);
+	map { $seen{$_}++; print "seen $_\n" } @f;
+}

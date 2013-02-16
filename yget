@@ -87,5 +87,7 @@ END {
 	if(length(output) == 0)
 		output = n
 	if (u)
-		system("curl -L -C - -o " output " '\''" u "'\''")
+		exit(system("curl -L -C - -o " output " '\''" u "'\''"))
+	else
+		exit(1)
 }'

@@ -1,3 +1,9 @@
+yget (2.5.8-r120) unstable; urgency=low
+
+  * yget uses curl -L
+
+ -- Szabolcs Nagy <nsz@port70.net>  Mon, 18 Feb 2013 21:25:53 +0100
+
 yget (2.5.7-r118) unstable; urgency=low
 
   * minor playlist fix

@@ -169,20 +169,8 @@ function getvars() {
 	gsub(/\\u0026/, "\\&", c["ttsurl"])
 	ok = 1
 }
-# old way
-/flashvars=\\"/ {
-	sub(/^.*flashvars=\\"/, "")
-	sub(/\\".*$/, "")
-	split($0, a, /\\u0026amp;/)
-	for (i in a) {
-		split(a[i], b, /=/)
-		map[b[1]] = unquote(b[2])
-#		print b[1],map[b[1]],b[2]
-	}
-	getvars()
-}
 /"url_encoded_fmt_stream_map"/ {
-	sub(/^[^{]*{/, "")
+	sub(/^.*config = {/, "")
 	sub(/};.*$/, "")
 	gsub(/\\\//, "/")
 	gsub(/}/,"")

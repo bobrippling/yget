@@ -84,7 +84,7 @@ END {
 	if (lang && ttsurl)
 		system("curl -L '\''" ttsurl "'\'' | ysubfix >" n "." lang ".srt")
 	if (u)
-		exit(system("curl -L -C - -o " n " '\''" u "'\''")
+		exit(system("wget -cO " prefix name "_"  id e " '\''" u "'\''"))
 	else
 		exit(1)
 }'

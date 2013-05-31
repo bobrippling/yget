@@ -123,7 +123,7 @@ status ~ /30./ && /^Location:/ {
 	sub(/<.*/, "")
 	c["dislikes"] = $0
 }
-/class="watch-view-count"/ {
+/class="watch-view-count/ {
 	getline
 	sub(/.*<strong>/, "")
 	sub(/<.*/, "")
@@ -132,6 +132,9 @@ status ~ /30./ && /^Location:/ {
 }
 /verify[_-]age/ {
 	unsafe=1
+}
+/id="unavailable-message"/ {
+	unavail=1
 }
 function getvars() {
 	n = split(map["url_encoded_fmt_stream_map"], u, /,/)
@@ -191,6 +194,8 @@ END {
 	if (!ok) {
 		if (unsafe)
 			print "err\t(verify your age by signing in)" >"/dev/stderr"
+		if (unavail)
+			print "err\t(video is unavailable in your country)" >"/dev/stderr"
 		exit 1
 	}
 	N = split("fmts " urls " id name length date views title desc tags thumbhq list", a)

@@ -5,6 +5,7 @@ hqfmts="22 35 37 34"
 prefix="y_"
 cmd="$0"
 url=
+#lang=en
 
 usage() {
 	echo "usage: $cmd [-hq|-fmt fmtlist|-sub lang|-prefix prefix] URL" 1>&2

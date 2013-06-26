@@ -55,8 +55,8 @@ END {
 			break
 		}
 	if (lang) {
-		system("wget -O /tmp/yplay_sub.xml '\''" ttsurl "&lang=" lang "'\''")
-		s = " -sub /tmp/yplay_sub.xml"
+		system("wget -O /tmp/yplay.sub '\''" ttsurl "&lang=" lang "'\''")
+		s = " -sub /tmp/yplay.sub"
 	}
 	if (u)
 		system("mplayer -cache 32768 -cache-min 1 -cache-seek-min 10" s " -title '\''" t "'\'' '\''" u "'\''")

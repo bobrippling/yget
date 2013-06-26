@@ -23,8 +23,8 @@ NAME
 
 
 SYNOPSIS
-       yget URL [-hq|-fmt fmtlist|-prefix prefix]
-       yplay URL [-hq|-fmt fmtlist]
+       yget URL [-hq|-fmt fmtlist|-sub lang|-prefix prefix]
+       yplay URL [-hq|-fmt fmtlist|-sub lang]
        yurl URL
 
 
@@ -36,18 +36,31 @@ DESCRIPTION
        name  already exists then yget assumes that the video is unfinished and
        tries to continue the download.
 
-       Higher quality video format can be selected by -hq and -fmt  allows  to
-       select the format directly.
-
        yplay streams the video of the given youtube URL.
 
        yurl prints a key value pair list about the given youtube URL (download
        url, title, length, etc.).
 
 
+OPTIONS
+       -hq    Tries to select the highest quality video format.
+
+       -fmt fmtlist
+              Select the specified video format, the argument is a space sepa-
+              rated list of numbers, the first available format will be  down-
+              loaded.
+
+       -sub lang
+              Download  subtitle  for  the specified language (two letter lan-
+              guage code is used, eg 'en', 'de', 'fr').
+
+       -prefix prefix
+              Filename prefix used by yget.
+
+
 EXAMPLES
-       yplay "youtube.co.uk/watch?v=abcdefghijk&amp;foo=123&amp;bar=456"
-       yget youtu.be/abcdefghijk
+       yplay -hq -sub en "youtube.co.uk/watch?v=abcdefghijk&amp;foo=123&amp;bar=456"
+       yget -fmt '43 45' youtu.be/abcdefghijk
        yget abcdefghijk
        yget http://www.youtube.com/view_play_list?p=abcdefghijklmnop
        yurl http://youtube.com/p/abcdefghijklmnop
@@ -55,13 +68,20 @@ EXAMPLES
 
 NOTES
        If the URL has query parameters ("&amp;foo=bar") then the "&amp;" might need to
-       be escaped in the shell. Internally these parameters are dropped,  only
+       be  escaped in the shell. Internally these parameters are dropped, only
        the video or playlist id is used.
 
        yget and yplay try to get a 640x360 resolution  H.264  encoded  version
        (fmt=34).   For  other versions see the download url## from yurl or use
        -fmt.  (possible fmt parameters are 5 6 13 17 18 22 34 35 36 37  43  45
        82 84 100 102)
+
+       For  the  available  subtitle  languages, check ttlang in the output of
+       yurl.  (the final timed text url is the ttsurl plus '&amp;lang=xx' where xx
+       is the two letter language code). The subtitle is in xml format that is
+       recognized by mplayer.  yget saves the subtitle under the same name  as
+       the  video plus '.lang.sub' so mplayer loads it if -sub-fuzziness is at
+       least 1, yplay stores the subtitle in /tmp/yplay.sub.
 
        Any recent mplayer or vlc should be able to stream the video  from  the
        urls  printed  by  yurl.   Seeking in the stream might not work.  yplay

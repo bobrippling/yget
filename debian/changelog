@@ -1,3 +1,9 @@
+yget (2.6.0-r132) unstable; urgency=low
+
+  * subtitle handling
+
+ -- Szabolcs Nagy <nsz@port70.net>  Wed, 26 Jun 2013 22:23:22 +0200
+
 yget (2.5.10-r127) unstable; urgency=low
 
   * unavail msg

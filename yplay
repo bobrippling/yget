@@ -5,9 +5,10 @@ hqfmts="22 35 37 34"
 url=
 
 usage() {
-	echo "usage: $0 [-hq|-fmt fmtlist] URL" 1>&2
-	echo "  -hq     - high quality, equivalent to -fmt '$hqfmts'" 1>&2
-	echo "  -fmt    - format preference, default: '$fmts'" 1>&2
+	echo "usage: $0 [-hq|-fmt fmtlist|-sub lang] URL" 1>&2
+	echo "  -hq       - high quality, equivalent to -fmt '$hqfmts'" 1>&2
+	echo "  -fmt fmts - format preference, default: '$fmts'" 1>&2
+	echo "  -sub lang - display subtitle if available (en,de,fr,es,ru,..)" 1>&2
 	exit 1
 }
 
@@ -15,12 +16,13 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 	-hq ) fmts="$hqfmts"; shift 1;;
 	-fmt ) fmts="$2"; shift 2;;
+	-sub ) lang="$2"; shift 2;;
 	* ) url="$1"; shift 1;;
 	esac
 done
 [ "x$url" != "x" ] || usage
 
-yurl "$url" |awk -v fmts="$fmts" '
+yurl "$url" |awk -v fmts="$fmts" -v lang="$lang" '
 function fix() {
 	gsub("'\''","")
 }
@@ -41,6 +43,10 @@ function fix() {
 	sub(/^title[ \t]*/,"")
 	t="MPlayer - " $0
 }
+/^ttsurl/ {
+	fix()
+	ttsurl=$2
+}
 END {
 	n = split(fmts, a)
 	for (i = 1; i <= n; i++)
@@ -48,6 +54,10 @@ END {
 			u = url[a[i]]
 			break
 		}
+	if (lang) {
+		system("wget -O /tmp/yplay_sub.xml '\''" ttsurl "&lang=" lang "'\''")
+		s = " -sub /tmp/yplay_sub.xml"
+	}
 	if (u)
-		system("mplayer -cache 32768 -cache-min 1 -cache-seek-min 10 -title '\''" t "'\'' '\''" u "'\''")
+		system("mplayer -cache 32768 -cache-min 1 -cache-seek-min 10" s " -title '\''" t "'\'' '\''" u "'\''")
 }'

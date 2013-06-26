@@ -7,10 +7,11 @@ cmd="$0"
 url=
 
 usage() {
-	echo "usage: $cmd [-hq|-fmt fmtlist|-prefix prefix] URL" 1>&2
-	echo "  -hq     - high quality, equivalent to -fmt '$hqfmts'" 1>&2
-	echo "  -fmt    - format preference, default: '$fmts'" 1>&2
-	echo "  -prefix - $prefix" 1>&2
+	echo "usage: $cmd [-hq|-fmt fmtlist|-sub lang|-prefix prefix] URL" 1>&2
+	echo "  -hq       - high quality, equivalent to -fmt '$hqfmts'" 1>&2
+	echo "  -fmt fmts - format preference, default: '$fmts'" 1>&2
+	echo "  -sub lang - download subtitle if available (en,de,fr,es,ru,..)" 1>&2
+	echo "  -prefix   - $prefix" 1>&2
 	exit 1
 }
 
@@ -18,13 +19,14 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 	-hq ) fmts="$hqfmts"; shift 1;;
 	-fmt ) fmts="$2"; shift 2;;
+	-sub ) lang="$2"; shift 2;;
 	-prefix ) prefix="$2"; shift 2;;
 	* ) url="$1"; shift 1;;
 	esac
 done
 [ "x$url" != "x" ] || usage
 
-yurl "$url" |awk -v prefix="$prefix" -v cmd="$cmd" -v fmts="$fmts" '
+yurl "$url" |awk -v prefix="$prefix" -v cmd="$cmd" -v fmts="$fmts" -v lang="$lang" '
 function fix() {
 	gsub("'\''","")
 }
@@ -48,6 +50,10 @@ function fix() {
 	sub(/url/, "")
 	url[$1] = $2
 }
+/^ttsurl/ {
+	fix()
+	ttsurl=$2
+}
 /^id/ {
 	fix()
 	id=$2
@@ -70,6 +76,9 @@ END {
 	e = ext[f]
 	if (!e)
 		e = ".flv"
+	n = prefix name "_"  id e
+	if (lang)
+		system("curl -L -o " n "." lang ".sub '\''" ttsurl "&lang=" lang "'\''")
 	if (u)
-		system("curl -L -C - -o " prefix name "_"  id e " '\''" u "'\''")
+		system("curl -L -C - -o " n " '\''" u "'\''")
 }'

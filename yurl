@@ -170,6 +170,9 @@ function getvars() {
 	c["list"] = pl
 	c["name"] = clean(c["title"])
 	gsub(/\\u0026/, "\\&", c["ttsurl"])
+	c["ttlang"]=c["ttsurl"]
+	sub(/.*asr_langs=/,"", c["ttlang"])
+	sub(/&.*/,"", c["ttlang"])
 	ok = 1
 }
 /"url_encoded_fmt_stream_map"/ {
@@ -198,7 +201,7 @@ END {
 			print "err\t(video is unavailable in your country)" >"/dev/stderr"
 		exit 1
 	}
-	N = split("fmts " urls " id name length date views title desc tags thumbhq list", a)
+	N = split("fmts " urls " ttlang ttsurl id name length date views title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 }'

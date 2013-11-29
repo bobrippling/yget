@@ -1,3 +1,10 @@
+yget (2.6.1-r135) unstable; urgency=low
+
+  * fix invalid { in regex
+  * format 45
+
+ -- Szabolcs Nagy <nsz@port70.net>  Fri, 29 Nov 2013 22:47:09 +0100
+
 yget (2.6.0-r132) unstable; urgency=low
 
   * subtitle handling

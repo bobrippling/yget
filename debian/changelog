@@ -1,3 +1,12 @@
+yget (2.7.0-r138) unstable; urgency=low
+
+  * add html5-player js parser and local cache
+  * show html5 urls too (separate audio and video streams)
+  * various parsing changes because html changes
+  * remove ttsurl printing (subtitles are now handled differently)
+
+ -- Szabolcs Nagy <nsz@port70.net>  Fri, 29 Nov 2013 22:47:09 +0100
+
 yget (2.6.1-r135) unstable; urgency=low
 
   * fix invalid { in regex

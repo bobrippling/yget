@@ -78,6 +78,7 @@ END {
 	if (!e)
 		e = ".flv"
 	n = prefix name "_"  id e
+	print n
 	if (lang)
 		system("curl -L -o " n "." lang ".sub '\''" ttsurl "&lang=" lang "'\''")
 	if (u)

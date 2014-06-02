@@ -48,6 +48,7 @@ BEGIN {
 	for (i = 0; i < 256; i++)
 		tab[sprintf("%X", i)] = sprintf("%c", i)
 }
+function err(msg) {print "error: " msg > "/dev/stderr"}
 function unquote(s, i,n,x,t) {
 	n = split(s, t, "%")
 	s = t[1]
@@ -80,10 +81,10 @@ function getmeta() {
 	$0 = unquote2($0)
 }
 function clean(s) {
-	s = tolower(s)
+#	s = tolower(s)
 	gsub(/[({]/, "[", s)
 	gsub(/[)}]/, "]", s)
-	gsub(/[^a-z0-9.+%:\[\]\-]/, "_", s)
+	gsub(/[^a-zA-Z0-9.+%:\[\]\-]/, "_", s)
 	gsub(/__*/, "_", s)
 	sub(/^_/, "", s)
 	sub(/_$/, "", s)
@@ -91,10 +92,10 @@ function clean(s) {
 }
 NR==1 && $0 !~ /200 OK/ {
 	status = $2
-	print $0 >"/dev/stderr"
+	err($0)
 }
 status ~ /30./ && /^Location:/ {
-	print $0 >"/dev/stderr"
+	err($0)
 }
 /<meta name="title"/ {
 	getmeta()
@@ -108,8 +109,8 @@ status ~ /30./ && /^Location:/ {
 	getmeta()
 	c["keywords2"] = $0
 }
-/<span id="eow-date"/ {
-	sub(/.*"eow-date"[^>]*>/, "")
+/<strong>(Published|Uploaded) on / {
+	sub(/.*(Published|Uploaded) on /, "")
 	sub(/<.*/, "")
 	c["date"] = $0
 }
@@ -124,10 +125,10 @@ status ~ /30./ && /^Location:/ {
 	c["dislikes"] = $0
 }
 /class="watch-view-count/ {
-	getline
-	sub(/.*<strong>/, "")
+	sub(/.*"watch-view-count">/, "")
 	sub(/<.*/, "")
 	sub(/^ */, "")
+	sub(/ views/, "")
 	c["views"] = $0
 }
 /verify[_-]age/ {
@@ -136,7 +137,76 @@ status ~ /30./ && /^Location:/ {
 /id="unavailable-message"/ {
 	unavail=1
 }
+function swap(a,i,j, tmp) {
+	tmp = a[j]
+	a[j] = a[i]
+	a[i] = tmp
+}
+function op_sw(a,i) {
+	swap(a,i,0)
+}
+function op_rev(a,n, i) {
+	for (i=0;2*i+1<n;i++)
+		swap(a,i,n-i-1)
+}
+function op_skip(a,n,k, i) {
+	for (i=0;i<n-k;i++)
+		a[i]=a[i+k]
+}
+function do_op(op,a,n) {
+	if (op~/^S/)
+		op_sw(a,substr(op,3)+0)
+	else if (op~/^R/)
+		op_rev(a,n)
+	else if (op~/^K/) {
+		k=substr(op,3)+0
+		op_skip(a,n,k)
+		n-=k
+	}
+	return n
+}
+function scramble(ops,sig,  a,i,n) {
+	n = split(sig,a,//)
+	op_skip(a,n+1,1)
+	for (i=1; i in ops; i++)
+		n = do_op(ops[i],a,n)
+	sig=""
+	for(i=0;i<n;i++)
+		sig = sig a[i]
+	return sig
+}
+function getjsops(jsurl,ops,  fn,fnops,dir,i,n) {
+	fn = jsurl
+	sub(/.*\//,"",fn)
+	dir = ENVIRON["HOME"]
+	if (!dir) dir = "/tmp"
+	dir = dir "/.yget"
+	fn = dir "/" clean(fn)
+	fnops = fn".ops"
+	for (i=1; getline ops[i] < fnops == 1; i++);
+	if (i<=1) {
+		cmd = "cat "fn" 2>/dev/null || { mkdir -p "dir" && curl -L -s "jsurl" |sed -n '\''s/.*\\(function ..(a){a=a\\.split(\"\");a=[^}]*}\\).*/\\1/p'\'' |tee "fn" ; }"
+		if (cmd |getline != 1)
+			err("command failed: " cmd)
+		fun = $0
+		if (!sub(/.*split\(""\);a=/,"",fun)) err("bad fun prefix in "jsurl": " fun)
+		if (!sub(/[)b];return a.*/,"",fun)) err("bad fun suffix in "jsurl": " fun)
+		n=split(fun,ops,/\);(a=|var b=)/)
+		printf "" > fn ".ops"
+		for (i=1; i<=n; i++) {
+			if (ops[i] ~ /^..\(a,/) ops[i]="S " substr(ops[i],6)
+			else if (ops[i] ~ /^a\[0\];a\[0\]=a\[/) {sub(/.*=a\[/,"S ",ops[i]); sub(/%.*/,"",ops[i]);}
+			else if (ops[i] ~ /^..reverse\(/) ops[i]="R"
+			else if (ops[i] ~ /^..slice\(/) ops[i]="K " substr(ops[i],9)
+			else err("bad op in "jsurl": " ops[i] ")")
+			print ops[i] >> fn ".ops"
+		}
+	}
+}
 function getvars() {
+	if (map["url_encoded_fmt_stream_map"] !~ /signature%3D/ || map["adaptive_fmts"] !~ /signature%3D/) {
+		getjsops("http:" map["js"],jsops)
+	}
 	n = split(map["url_encoded_fmt_stream_map"], u, /,/)
 	for (i = 1; i <= n; i++) {
 		k = split(u[i],a,/\\u0026|&/)
@@ -144,10 +214,13 @@ function getvars() {
 			split(a[j], b, /=/)
 			sub(/"/, "", b[2])
 			d[b[1]] = b[2]
-#			print i,b[1],d[b[1]]
+#			print "u",i,b[1],d[b[1]]
 		}
 		it = d["itag"]
-		map["url" it] = d["url"] "&signature=" d["sig"]
+		if (d["url"] !~ /signature%3D/) {
+			d["url"] = d["url"] "&signature=" scramble(jsops,d["s"])
+		}
+		map["url" it] = d["url"]
 		map["fmt" it] = d["type"]
 		urls = urls " fmt" it " url" it
 		map["fmts"] = map["fmts"] it " "
@@ -157,6 +230,27 @@ function getvars() {
 		split(u[i],a,/\//)
 		map["fmt" a[1]] = a[2] " " map["fmt" a[1]]
 	}
+
+	n = split(map["adaptive_fmts"], u, /,/)
+	for (i = 1; i <= n; i++) {
+		k = split(u[i],a,/\\u0026|&/)
+		for (j in a) {
+			split(a[j], b, /=/)
+			sub(/"/, "", b[2])
+			d[b[1]] = b[2]
+#			print "a",i,b[1],d[b[1]]
+		}
+		it = d["itag"]
+		if (d["url"] !~ /signature%3D/) {
+			d["url"] = d["url"] "&signature=" scramble(jsops,d["s"])
+		}
+		map["url" it] = d["url"]
+		map["fmt" it] = d["size"] " " d["type"]
+		urls = urls " fmt" it " url" it
+		map["fmts"] = map["fmts"] it " "
+		d["size"]=""
+	}
+
 	for (i in map) {
 		c[i] = unquote(map[i])
 	}
@@ -168,7 +262,7 @@ function getvars() {
 	c["thumb"] = "http://i.ytimg.com/vi/" c["video_id"] "/default.jpg"
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
 	c["list"] = pl
-	c["name"] = clean(c["title"])
+	c["name"] = clean(tolower(c["title"]))
 	gsub(/\\u0026/, "\\&", c["ttsurl"])
 	c["ttlang"]=c["ttsurl"]
 	sub(/.*asr_langs=/,"", c["ttlang"])
@@ -201,7 +295,7 @@ END {
 			print "err\t(video is unavailable in your country)" >"/dev/stderr"
 		exit 1
 	}
-	N = split("fmts " urls " ttlang ttsurl id name length date views title desc tags thumbhq list", a)
+	N = split("fmts " urls " id name length date views title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 }'

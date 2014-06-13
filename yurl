@@ -185,13 +185,17 @@ function getjsops(jsurl,ops,  fn,fnops,dir,i,n) {
 	fnops = fn".ops"
 	for (i=1; getline ops[i] < fnops == 1; i++);
 	if (i<=1) {
-		cmd = "cat "fn" 2>/dev/null || { mkdir -p "dir" && curl -L -s "jsurl" |sed -n '\''s/.*\\(function ..(a){a=a\\.split(\"\");a=[^}]*}\\).*/\\1/p'\'' |tee "fn" ; }"
-		if (cmd |getline != 1)
-			err("command failed: " cmd)
+		cmd = "cat "fn" 2>/dev/null || { mkdir -p "dir" && curl -L -s "jsurl" |sed -n '\''s/.*\\(function ..(a){a=a\\.split(\"\");[^}]*join(\"\")}\\).*/\\1/p'\'' |tee "fn" ; }"
+		for (;;) {
+			if (cmd |getline != 1)
+				err("command failed: " cmd)
+			if ($0 !~ /[^a-zA-Z][a-zA-Z][a-zA-Z]\.[a-zA-Z][a-zA-Z][^a-zA-Z]/)
+				break
+		}
 		fun = $0
 		if (!sub(/.*split\(""\);a=/,"",fun)) err("bad fun prefix in "jsurl": " fun)
 		if (!sub(/[)b];return a.*/,"",fun)) err("bad fun suffix in "jsurl": " fun)
-		n=split(fun,ops,/\);(a=|var b=)/)
+		n=split(fun,ops,/[)b];(a=|var b=)/)
 		printf "" > fn ".ops"
 		for (i=1; i<=n; i++) {
 			if (ops[i] ~ /^..\(a,/) ops[i]="S " substr(ops[i],6)

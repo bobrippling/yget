@@ -177,7 +177,8 @@ function scramble(ops,sig,  a,i,n) {
 }
 function getjsops(jsurl,ops,  fn,fnops,dir,i,n) {
 	fn = jsurl
-	sub(/.*\//,"",fn)
+	sub(/.*jsbin\//,"",fn)
+	sub(/\//,"_",fn)
 	dir = ENVIRON["HOME"]
 	if (!dir) dir = "/tmp"
 	dir = dir "/.yget"
@@ -187,8 +188,10 @@ function getjsops(jsurl,ops,  fn,fnops,dir,i,n) {
 	if (i<=1) {
 		cmd = "cat "fn" 2>/dev/null || { mkdir -p "dir" && curl -L -s "jsurl" |sed -n '\''s/.*\\(function ..(a){a=a\\.split(\"\");[^}]*join(\"\")}\\).*/\\1/p'\'' |tee "fn" ; }"
 		for (;;) {
-			if (cmd |getline != 1)
+			if (cmd |getline != 1) {
 				err("command failed: " cmd)
+				return
+			}
 			if ($0 !~ /[^a-zA-Z][a-zA-Z][a-zA-Z]\.[a-zA-Z][a-zA-Z][^a-zA-Z]/)
 				break
 		}

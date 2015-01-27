@@ -1,16 +1,31 @@
 #!/bin/sh
 
+debug() {
+	if [ -n "$YGET_DEBUG" ]
+	then
+		mkdir -p $HOME/.yget
+		tee "$1"
+	else
+		cat
+	fi
+}
+
 get() {
-	curl -L -s -i "$1"
-#	# debug
-#	mkdir -p $HOME/.yget
-#	curl -L -s -i "$1" |tee $HOME/.yget/y$V$P
+	curl -L -s -i "$1" |debug $HOME/.yget/y$V$P.html
 # wget only emits headers in case of OK status
 #	wget -q --save-headers -O- "$1"
 }
 
 export LC_ALL=C
 [ $# -eq 1 ] || { echo "usage: $0 URL" 1>&2; exit 1; }
+
+# optional js interpreter for url signature deobfuscation
+[ "$JSCMD" ] || {
+	JSCMD=`command -v js24 || command -v js || command -v mujs || command -v js17 || command -v smjs || command -v nodejs || command -v jsc || echo /bin/false`
+}
+[ "$JSCMD" != /bin/false ] || { echo 'no js interpreter found' 1>&2; }
+printf "jscmd\t$JSCMD\n"
+
 V=$(echo "$1"|sed -n '
 	s|[^a-zA-Z0-9_-]|/|g
 	s|^...........$|/v/&|
@@ -24,8 +39,8 @@ P=$(echo "$1"|sed -n '
 	s|/list/|/p/|
 	s|/PL|/p/|
 	s|.*/p/\([^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/]*\).*|\1|p')
-VURL="http://www.youtube.com/watch?v=$V&hl=en"
-PURL="http://www.youtube.com/view_play_list?p=$P"
+VURL="https://www.youtube.com/watch?v=$V&hl=en"
+PURL="https://www.youtube.com/view_play_list?p=$P"
 [ "$P" ] || [ "$V" ] || { echo 'no video id or playlist id found' 1>&2; exit 1; }
 [ "$V" ] || {
 	# playlist url
@@ -43,7 +58,7 @@ PURL="http://www.youtube.com/view_play_list?p=$P"
 }
 [ "$V" ] && {
 	# video url
-	get "$VURL" |awk -v pl=$P '
+	get "$VURL" |awk -v pl=$P -v jscmd=$JSCMD '
 BEGIN {
 	for (i = 0; i < 256; i++)
 		tab[sprintf("%X", i)] = sprintf("%c", i)
@@ -109,7 +124,7 @@ status ~ /30./ && /^Location:/ {
 	getmeta()
 	c["keywords2"] = $0
 }
-/<strong>(Published|Uploaded) on / {
+/<strong[^>]*>(Published|Uploaded) on / {
 	sub(/.*(Published|Uploaded) on /, "")
 	sub(/<.*/, "")
 	c["date"] = $0
@@ -125,7 +140,7 @@ status ~ /30./ && /^Location:/ {
 	c["dislikes"] = $0
 }
 /class="watch-view-count/ {
-	sub(/.*"watch-view-count">/, "")
+	sub(/.*"watch-view-count" *>/, "")
 	sub(/<.*/, "")
 	sub(/^ */, "")
 	sub(/ views/, "")
@@ -137,82 +152,76 @@ status ~ /30./ && /^Location:/ {
 /id="unavailable-message"/ {
 	unavail=1
 }
-function swap(a,i,j, tmp) {
-	tmp = a[j]
-	a[j] = a[i]
-	a[i] = tmp
-}
-function op_sw(a,i) {
-	swap(a,i,0)
-}
-function op_rev(a,n, i) {
-	for (i=0;2*i+1<n;i++)
-		swap(a,i,n-i-1)
-}
-function op_skip(a,n,k, i) {
-	for (i=0;i<n-k;i++)
-		a[i]=a[i+k]
-}
-function do_op(op,a,n) {
-	if (op~/^S/)
-		op_sw(a,substr(op,3)+0)
-	else if (op~/^R/)
-		op_rev(a,n)
-	else if (op~/^K/) {
-		k=substr(op,3)+0
-		op_skip(a,n,k)
-		n-=k
+function fixsigs(b,  a,j,n) {
+	if (!jsdir || !sigjs) return
+	tmp=jsdir"/tmp.js"
+	if (system("cp "sigjs" "tmp)) {
+		err("no sigjs "sigjs)
+		return
 	}
-	return n
+	j=0
+	for (i in b) {
+		if (b[i]) {
+			a[++j] = i
+			print "'$V' fmt"i,b[i] >>jsdir"/sig.in"
+			print "sigfun(\""b[i]"\");" >>tmp
+		}
+	}
+	if (!j) return
+	fflush(tmp)
+	cmd = jscmd" "tmp
+	for (i=1; i<=j; i++) {
+		if (cmd |getline != 1) {
+			err("command failed: "cmd)
+			return
+		}
+		print "'$V' fmt"a[i],$0 >>jsdir"/sig.out"
+		b[a[i]] = $0
+	}
 }
-function scramble(ops,sig,  a,i,n) {
-	n = split(sig,a,//)
-	op_skip(a,n+1,1)
-	for (i=1; i in ops; i++)
-		n = do_op(ops[i],a,n)
-	sig=""
-	for(i=0;i<n;i++)
-		sig = sig a[i]
-	return sig
-}
-function getjsops(jsurl,ops,  fn,fnops,dir,i,n) {
+function getsigjs(jsurl,  fn,h5js) {
 	fn = jsurl
-	sub(/.*jsbin\//,"",fn)
-	sub(/\//,"_",fn)
-	dir = ENVIRON["HOME"]
-	if (!dir) dir = "/tmp"
-	dir = dir "/.yget"
-	fn = dir "/" clean(fn)
-	fnops = fn".ops"
-	for (i=1; getline ops[i] < fnops == 1; i++);
-	if (i<=1) {
-		cmd = "cat "fn" 2>/dev/null || { mkdir -p "dir" && curl -L -s "jsurl" |sed -n '\''s/.*\\(function ..(a){a=a\\.split(\"\");[^}]*join(\"\")}\\).*/\\1/p'\'' |tee "fn" ; }"
-		for (;;) {
-			if (cmd |getline != 1) {
-				err("command failed: " cmd)
-				return
-			}
-			if ($0 !~ /[^a-zA-Z][a-zA-Z][a-zA-Z]\.[a-zA-Z][a-zA-Z][^a-zA-Z]/)
-				break
+	sub(/.*-/,"",fn)
+	sub(/\/.*/,"",fn)
+	if (fn !~ /^[a-zA-Z0-9_]*/)
+		fn = "_bad_"
+
+	jsdir = ENVIRON["HOME"]
+	if (!jsdir) jsdir = "/tmp"
+	jsdir = jsdir "/.yget/" fn
+	h5js = jsdir "/html5player.js"
+	sigjs = jsdir"/sig.js"
+	system("mkdir -p "jsdir)
+	print jsurl" '$V'" >>jsdir"/jsurl"
+	print "jsurl\t"jsurl
+
+	if (system("test -f "sigjs)) {
+		cmd = "curl -L -s "jsurl" |tee "h5js" |grep -o '\''\"signature\",.....'\'' |tee "jsdir"/sigfunccall |sed '\''1s/.*,\\([a-zA-Z0-9]*\\).*/\\1/'\''"
+		if (cmd |getline != 1) {
+			err("command failed: " cmd)
+			return
 		}
 		fun = $0
-		if (!sub(/.*split\(""\);a=/,"",fun)) err("bad fun prefix in "jsurl": " fun)
-		if (!sub(/[)b];return a.*/,"",fun)) err("bad fun suffix in "jsurl": " fun)
-		n=split(fun,ops,/[)b];(a=|var b=)/)
-		printf "" > fn ".ops"
-		for (i=1; i<=n; i++) {
-			if (ops[i] ~ /^..\(a,/) ops[i]="S " substr(ops[i],6)
-			else if (ops[i] ~ /^a\[0\];a\[0\]=a\[/) {sub(/.*=a\[/,"S ",ops[i]); sub(/%.*/,"",ops[i]);}
-			else if (ops[i] ~ /^..reverse\(/) ops[i]="R"
-			else if (ops[i] ~ /^..slice\(/) ops[i]="K " substr(ops[i],9)
-			else err("bad op in "jsurl": " ops[i] ")")
-			print ops[i] >> fn ".ops"
+		print "sigfun\t"fun
+#		cmd = "grep -o -E '\''.{1,255}function "fun"\\(.{1,255}'\'' "h5js" >"jsdir"/sigfuncdef"
+#		if (system(cmd)) {
+#			err("command failed: " cmd)
+#			return
+#		}
+		print "var window={location:\"\", document:{}, navigator:{plugins:{}}, history:{}};" >sigjs
+		print "var document=window.document; var navigator=window.navigator;" >>sigjs
+		print "if (typeof print == \"undefined\") print = console.log;" >>sigjs
+		print "function sigfun(x){print("fun"(x))}" >>sigjs
+		cmd = "sed '\''1s/^(function(){//;s/})();$//'\'' "h5js" >>"sigjs
+		if (system(cmd)) {
+			err("command failed: " cmd)
+			return
 		}
 	}
 }
 function getvars() {
 	if (map["url_encoded_fmt_stream_map"] !~ /signature%3D/ || map["adaptive_fmts"] !~ /signature%3D/) {
-		getjsops("http:" map["js"],jsops)
+		getsigjs("http:" map["js"])
 	}
 	n = split(map["url_encoded_fmt_stream_map"], u, /,/)
 	for (i = 1; i <= n; i++) {
@@ -224,9 +233,8 @@ function getvars() {
 #			print "u",i,b[1],d[b[1]]
 		}
 		it = d["itag"]
-		if (d["url"] !~ /signature%3D/) {
-			d["url"] = d["url"] "&signature=" scramble(jsops,d["s"])
-		}
+		if (d["url"] !~ /signature%3D/ && d["s"])
+			map["sig"it] = d["s"]
 		map["url" it] = d["url"]
 		map["fmt" it] = d["type"]
 		urls = urls " fmt" it " url" it
@@ -248,14 +256,25 @@ function getvars() {
 #			print "a",i,b[1],d[b[1]]
 		}
 		it = d["itag"]
-		if (d["url"] !~ /signature%3D/) {
-			d["url"] = d["url"] "&signature=" scramble(jsops,d["s"])
-		}
+		if (d["url"] !~ /signature%3D/ && d["s"])
+			map["sig"it] = d["s"]
 		map["url" it] = d["url"]
 		map["fmt" it] = d["size"] " " d["type"]
 		urls = urls " fmt" it " url" it
 		map["fmts"] = map["fmts"] it " "
 		d["size"]=""
+	}
+
+	n = split(map["fmts"],a)
+	split("",b)
+	for (i=1; i<=n; i++) {
+		if ("sig"a[i] in map)
+			b[a[i]] = map["sig"a[i]]
+	}
+	fixsigs(b)
+	for (i=1; i<=n; i++) {
+		if ("sig"a[i] in map)
+			map["url"a[i]] = map["url"a[i]] "&signature=" b[a[i]]
 	}
 
 	for (i in map) {
@@ -280,11 +299,12 @@ function getvars() {
 	sub(/^.*config = \{/, "")
 	sub(/};.*$/, "")
 	gsub(/\\\//, "/")
+	gsub(/\\"/, "``")
 	gsub(/}/,"")
-	gsub(/: *\{/,": {}, ")
-	n=split($0, a, /, /)
+	gsub(/: *\{/,":{},")
+	n=split($0, a, /, *"/)
 	for (i=1; i<=n; i++) {
-		split(a[i], b, /": ?/)
+		split(a[i], b, /": */)
 		sub(/^"/,"",b[1])
 		sub(/"$/,"",b[1])
 		sub(/^"/,"",b[2])
@@ -306,4 +326,4 @@ END {
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 }'
-}
+} | debug "$HOME/.yget/y$V.yurl"

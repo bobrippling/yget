@@ -60,5 +60,5 @@ END {
 		s = " -sub /tmp/yplay.sub"
 	}
 	if (u)
-		system("mplayer -cache 32768 -cache-min 1 -cache-seek-min 10" s " -title '\''" t "'\'' '\''" u "'\''")
+		system("mplayer -cache 32768 -cache-seek-min 10" s " -title '\''" t "'\'' '\''" u "'\''")
 }'

@@ -1,3 +1,10 @@
+yget (2.7.1-r143) unstable; urgency=low
+
+  * depend on external js interpreter
+  * debug mode through envvar
+
+ -- Szabolcs Nagy <nsz@port70.net>  Sat, 07 Mar 2015 01:25:04 +0100
+
 yget (2.7.0-r138) unstable; urgency=low
 
   * add html5-player js parser and local cache

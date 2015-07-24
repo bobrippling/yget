@@ -11,7 +11,9 @@ debug() {
 }
 
 get() {
+#	[ -e $HOME/.yget/y$V$P.html ] && cat $HOME/.yget/y$V$P.html || {
 	curl -L -s -i "$1" |debug $HOME/.yget/y$V$P.html
+#	}
 # wget only emits headers in case of OK status
 #	wget -q --save-headers -O- "$1"
 }
@@ -21,7 +23,7 @@ export LC_ALL=C
 
 # optional js interpreter for url signature deobfuscation
 [ "$JSCMD" ] || {
-	JSCMD=`command -v js24 || command -v js || command -v mujs || command -v js17 || command -v smjs || command -v nodejs || command -v jsc || echo /bin/false`
+	JSCMD=`command -v js24 || command -v js || command -v mujs || command -v js17 || command -v smjs || command -v nodejs || command -v node || command -v jsc || echo /bin/false`
 }
 [ "$JSCMD" != /bin/false ] || { echo 'no js interpreter found' 1>&2; }
 printf "jscmd\t$JSCMD\n"
@@ -223,6 +225,21 @@ function getvars() {
 	if (map["url_encoded_fmt_stream_map"] !~ /signature%3D/ || map["adaptive_fmts"] !~ /signature%3D/) {
 		getsigjs("http:" map["js"])
 	}
+
+	n = split(map["caption_tracks"], ct, /,/)
+	for (i = 1; i <= n; i++) {
+		k = split(ct[i],a,/\\u0026|&/)
+		for (j in a) {
+			split(a[j], b, /=/)
+			sub(/"/, "", b[2])
+			d[b[1]] = b[2]
+#			print "t",i,b[1],d[b[1]]
+		}
+		lang=d["lc"]
+		tmap[lang] = d["u"]
+		tsub=tsub " t_" lang
+	}
+
 	n = split(map["url_encoded_fmt_stream_map"], u, /,/)
 	for (i = 1; i <= n; i++) {
 		k = split(u[i],a,/\\u0026|&/)
@@ -277,6 +294,9 @@ function getvars() {
 			map["url"a[i]] = map["url"a[i]] "&signature=" b[a[i]]
 	}
 
+	for (i in tmap) {
+		c["t_" i] = unquote(tmap[i])
+	}
 	for (i in map) {
 		c[i] = unquote(map[i])
 	}
@@ -289,10 +309,10 @@ function getvars() {
 	c["thumbhq"] = "http://i.ytimg.com/vi/" c["video_id"] "/hqdefault.jpg"
 	c["list"] = pl
 	c["name"] = clean(tolower(c["title"]))
-	gsub(/\\u0026/, "\\&", c["ttsurl"])
-	c["ttlang"]=c["ttsurl"]
-	sub(/.*asr_langs=/,"", c["ttlang"])
-	sub(/&.*/,"", c["ttlang"])
+#	gsub(/\\u0026/, "\\&", c["ttsurl"])
+#	c["ttlang"]=c["ttsurl"]
+#	sub(/.*asr_langs=/,"", c["ttlang"])
+#	sub(/&.*/,"", c["ttlang"])
 	ok = 1
 }
 /"url_encoded_fmt_stream_map"/ {
@@ -322,7 +342,7 @@ END {
 			print "err\t(video is unavailable in your country)" >"/dev/stderr"
 		exit 1
 	}
-	N = split("fmts " urls " id name length date views title desc tags thumbhq list", a)
+	N = split("fmts " urls " " tsub " id name length date views title desc tags thumbhq list", a)
 	for (i = 1; i <= N; i++)
 		print a[i] "\t" c[a[i]]
 }'

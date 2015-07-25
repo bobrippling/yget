@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# convert youtube caption xml to srt subtitle format
+
+tr '<' '\n' |sed -n '
+/^text.*>/,/^\/text>/ {
+	/^text.*>/ {
+		s/.*start="\([^"]*\)".*dur="\([^"]*\)".*>/@\t\1\t\2\n/
+	}
+	/^\/text>/ {
+		s/.*//
+	}
+	s/&amp;/\&/g
+	s/&quot;/"/g
+	s/&#39;/'\''/g
+	p
+}' |awk '
+function ts(x) {
+	return sprintf("%02d:%02d:%02d,%03d", x/3600, x%3600/60, x%60, (x%1)*1000)
+}
+$1=="@" {
+	b=$2
+	e=$2+$3
+	print ++n
+	print ts(b), "-->", ts(e)
+	next
+}
+{print}'

@@ -3,7 +3,7 @@
 fmts="34 18 5 6 13 17 22 35 36 37 43 44 45 82 84 100 102"
 hqfmts="45 22 44 35 43 37 34 18"
 url=
-#lang=en
+lang=en
 
 usage() {
 	echo "usage: $0 [-hq|-fmt fmtlist|-sub lang] URL" 1>&2
@@ -44,7 +44,8 @@ function fix() {
 	sub(/^title[ \t]*/,"")
 	t="MPlayer - " $0
 }
-/^ttsurl/ {
+/^t_/ {
+	if ($1 != "t_" lang) next
 	fix()
 	ttsurl=$2
 }
@@ -55,9 +56,10 @@ END {
 			u = url[a[i]]
 			break
 		}
-	if (lang) {
-		system("wget -O /tmp/yplay.sub '\''" ttsurl "&lang=" lang "'\''")
-		s = " -sub /tmp/yplay.sub"
+	if (lang && ttsurl) {
+		system("wget -O /tmp/yplay.xml '\''" ttsurl "'\''")
+		system("ysubfix </tmp/yplay.xml >/tmp/yplay.srt")
+		s = " -sub /tmp/yplay.srt"
 	}
 	if (u)
 		system("mplayer -cache 32768 -cache-seek-min 10" s " -title '\''" t "'\'' '\''" u "'\''")

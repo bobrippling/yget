@@ -5,7 +5,7 @@ hqfmts="45 22 44 35 43 37 34 18"
 prefix="y_"
 cmd="$0"
 url=
-#lang=en
+lang=en
 
 usage() {
 	echo "usage: $cmd [-hq|-fmt fmtlist|-sub lang|-prefix prefix] URL" 1>&2
@@ -51,9 +51,11 @@ function fix() {
 	sub(/url/, "")
 	url[$1] = $2
 }
-/^ttsurl/ {
-	fix()
-	ttsurl=$2
+/^t_/ {
+	if ($1 == "t_" lang) {
+		fix()
+		ttsurl=$2
+	}
 }
 /^id/ {
 	fix()
@@ -79,8 +81,8 @@ END {
 		e = ".flv"
 	n = prefix name "_"  id e
 	print n
-	if (lang)
-		system("curl -L -o " n "." lang ".sub '\''" ttsurl "&lang=" lang "'\''")
+	if (lang && ttsurl)
+		system("curl -L '\''" ttsurl "'\'' | ysubfix >" n "." lang ".srt")
 	if (u)
 		system("curl -L -C - -o " n " '\''" u "'\''")
 }'

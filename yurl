@@ -41,7 +41,7 @@ P=$(echo "$1"|sed -n '
 	s|/list/|/p/|
 	s|/PL|/p/|
 	s|.*/p/\([^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/][^/]*\).*|\1|p')
-VURL="https://www.youtube.com/watch?v=$V&hl=en"
+VURL="https://www.youtube.com/watch?v=$V&gl=US&hl=en&has_verified=1"
 PURL="https://www.youtube.com/view_play_list?p=$P"
 [ "$P" ] || [ "$V" ] || { echo 'no video id or playlist id found' 1>&2; exit 1; }
 [ "$V" ] || {
@@ -183,38 +183,34 @@ function fixsigs(b,  a,j,n) {
 }
 function getsigjs(jsurl,  fn,h5js) {
 	fn = jsurl
-	sub(/.*-/,"",fn)
-	sub(/\/.*/,"",fn)
-	if (fn !~ /^[a-zA-Z0-9_]*/)
+	sub(/.*:\/\//,"",fn)
+	gsub(/\//,",",fn)
+	if (fn !~ /^[a-zA-Z0-9_,-]*/)
 		fn = "_bad_"
 
 	jsdir = ENVIRON["HOME"]
 	if (!jsdir) jsdir = "/tmp"
 	jsdir = jsdir "/.yget/" fn
-	h5js = jsdir "/html5player.js"
+	origjs = jsdir "/orig.js"
 	sigjs = jsdir"/sig.js"
 	system("mkdir -p "jsdir)
 	print jsurl" '$V'" >>jsdir"/jsurl"
 	print "jsurl\t"jsurl
 
 	if (system("test -f "sigjs)) {
-		cmd = "curl -L -s "jsurl" |tee "h5js" |grep -o '\''\"signature\",.....'\'' |tee "jsdir"/sigfunccall |sed '\''1s/.*,\\([a-zA-Z0-9]*\\).*/\\1/'\''"
+		cmd = "curl -L -s "jsurl" |tee "origjs" |grep -o '\''\"signature\",.....'\'' |tee "jsdir"/sigfunccall |sed '\''1s/.*,\\([a-zA-Z0-9]*\\).*/\\1/'\''"
 		if (cmd |getline != 1) {
 			err("command failed: " cmd)
 			return
 		}
 		fun = $0
 		print "sigfun\t"fun
-#		cmd = "grep -o -E '\''.{1,255}function "fun"\\(.{1,255}'\'' "h5js" >"jsdir"/sigfuncdef"
-#		if (system(cmd)) {
-#			err("command failed: " cmd)
-#			return
-#		}
-		print "var window={location:\"\", document:{}, navigator:{plugins:{}}, history:{}};" >sigjs
+		while (cmd |getline == 1);
+		print "var window={location:{hash:\"\"}, document:{currentScript:\"\"}, navigator:{plugins:{}}, history:{}, decodeURI:function(){}};" >sigjs
 		print "var document=window.document; var navigator=window.navigator;" >>sigjs
 		print "if (typeof print == \"undefined\") print = console.log;" >>sigjs
 		print "function sigfun(x){print("fun"(x))}" >>sigjs
-		cmd = "sed '\''1s/^(function(){//;s/})();$//'\'' "h5js" >>"sigjs
+		cmd = "sed '\''1s/^[^(]*(function([a-zA-Z0-9_,]*){//;1,2s/window=/window_fixed=/;1,2s/=this;/=window;/;$s/})([a-zA-Z0-9_,]*);$//'\'' "origjs" >>"sigjs
 		if (system(cmd)) {
 			err("command failed: " cmd)
 			return

@@ -22,11 +22,11 @@ export LC_ALL=C
 [ $# -eq 1 ] || { echo "usage: $0 URL" 1>&2; exit 1; }
 
 # optional js interpreter for url signature deobfuscation
-[ "$JSCMD" ] || {
-	JSCMD=`command -v js24 || command -v js || command -v mujs || command -v js17 || command -v smjs || command -v nodejs || command -v node || command -v jsc || echo /bin/false`
+[ "$YGET_JSCMD" ] || {
+	YGET_JSCMD=`command -v js24 || command -v js || command -v mujs || command -v js17 || command -v smjs || command -v nodejs || command -v node || command -v jsc || echo /bin/false`
 }
-[ "$JSCMD" != /bin/false ] || { echo 'no js interpreter found' 1>&2; }
-printf "jscmd\t$JSCMD\n"
+[ "$YGET_JSCMD" != /bin/false ] || { echo 'no js interpreter found' 1>&2; }
+printf "jscmd\t$YGET_JSCMD\n"
 
 V=$(echo "$1"|sed -n '
 	s|[^a-zA-Z0-9_-]|/|g
@@ -60,7 +60,7 @@ PURL="https://www.youtube.com/view_play_list?p=$P"
 }
 [ "$V" ] && {
 	# video url
-	get "$VURL" |awk -v pl=$P -v jscmd=$JSCMD '
+	get "$VURL" |awk -v pl=$P -v jscmd=$YGET_JSCMD '
 BEGIN {
 	for (i = 0; i < 256; i++)
 		tab[sprintf("%X", i)] = sprintf("%c", i)

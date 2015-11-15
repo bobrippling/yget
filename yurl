@@ -198,7 +198,7 @@ function getsigjs(jsurl,  fn,h5js) {
 	print "jsurl\t"jsurl
 
 	if (system("test -f "sigjs)) {
-		cmd = "curl -L -s "jsurl" |tee "origjs" |grep -o '\''\"signature\",.....'\'' |tee "jsdir"/sigfunccall |sed '\''1s/.*,\\([a-zA-Z0-9]*\\).*/\\1/'\''"
+		cmd = "curl -L -s "jsurl" |tee "origjs" |grep -o '\''\"signature\",.....'\'' |tee "jsdir"/sigfunccall |sed '\''1s/.*,\\([a-zA-Z0-9$_]*\\).*/\\1/'\''"
 		if (cmd |getline != 1) {
 			err("command failed: " cmd)
 			return

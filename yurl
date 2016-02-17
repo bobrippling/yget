@@ -206,11 +206,12 @@ function getsigjs(jsurl,  fn,h5js) {
 		fun = $0
 		print "sigfun\t"fun
 		while (cmd |getline == 1);
-		print "var window={location:{hash:\"\"}, document:{currentScript:\"\"}, navigator:{plugins:{}}, history:{}, decodeURI:function(){}};" >sigjs
+		print "var window={location:{protocol:\"\", hash:\"\"}, document:{currentScript:\"\", addEventListener:function(){}}," >sigjs
+		print "navigator:{plugins:{}, userAgent:\"\", mimeTypes:{}}, history:{}, decodeURI:function(){}};" >sigjs
 		print "var document=window.document; var navigator=window.navigator;" >>sigjs
 		print "if (typeof print == \"undefined\") print = console.log;" >>sigjs
 		print "function sigfun(x){print("fun"(x))}" >>sigjs
-		cmd = "sed '\''1s/^[^(]*(function([a-zA-Z0-9_,]*){//;1,2s/window=/window_fixed=/;1,2s/=this;/=window;/;$s/})([a-zA-Z0-9_,]*);$//'\'' "origjs" >>"sigjs
+		cmd = "sed '\''1s/^[^(]*(function(\\([a-zA-Z0-9_,]*\\)){/var \\1={};/;1,2s/window=/window_=/;1,2s/=this;/=window;/;$s/})([a-zA-Z0-9_,]*);$//'\'' "origjs" >>"sigjs
 		if (system(cmd)) {
 			err("command failed: " cmd)
 			return

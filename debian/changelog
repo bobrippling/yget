@@ -1,3 +1,9 @@
+yget (2.8.2-r156) unstable; urgency=low
+
+  * fix js prologue (more browser emu)
+
+ -- Szabolcs Nagy <nsz@port70.net>  Wed, 17 Feb 2016 00:33:13 +0000
+
 yget (2.8.1-r153) unstable; urgency=low
 
   * fix js signature function detection

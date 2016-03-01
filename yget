@@ -8,7 +8,7 @@ url=
 lang=en
 
 usage() {
-	echo "usage: $cmd [-hq|-fmt fmtlist|-sub lang|-prefix prefix] URL" 1>&2
+	echo "usage: $cmd [-hq|-fmt fmtlist|-sub lang|-prefix prefix] [-o output] URL" 1>&2
 	echo "  -hq       - high quality, equivalent to -fmt '$hqfmts'" 1>&2
 	echo "  -fmt fmts - format preference, default: '$fmts'" 1>&2
 	echo "  -sub lang - download subtitle if available (en,de,fr,es,ru,..)" 1>&2
@@ -22,12 +22,13 @@ while [ $# -gt 0 ]; do
 	-fmt ) fmts="$2"; shift 2;;
 	-sub ) lang="$2"; shift 2;;
 	-prefix ) prefix="$2"; shift 2;;
+	-o ) output="$2"; shift 2;;
 	* ) url="$1"; shift 1;;
 	esac
 done
 [ "x$url" != "x" ] || usage
 
-yurl "$url" |awk -v prefix="$prefix" -v cmd="$cmd" -v fmts="$fmts" -v lang="$lang" '
+yurl "$url" |awk -v prefix="$prefix" -v cmd="$cmd" -v fmts="$fmts" -v lang="$lang" -v output="$output" '
 function fix() {
 	gsub("'\''","")
 }
@@ -83,6 +84,8 @@ END {
 	print n
 	if (lang && ttsurl)
 		system("curl -L '\''" ttsurl "'\'' | ysubfix >" n "." lang ".srt")
+	if(length(output) == 0)
+		output = n
 	if (u)
-		system("curl -L -C - -o " n " '\''" u "'\''")
+		system("curl -L -C - -o " output " '\''" u "'\''")
 }'

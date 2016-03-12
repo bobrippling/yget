@@ -50,9 +50,10 @@ PURL="https://www.youtube.com/view_play_list?p=$P"
 	NR==1 && $0 !~ /200 OK/ {
 		print $0 >"/dev/stderr"
 	}
-	/data-video-ids/{
-		sub(/.*data-video-ids="/, "")
-		sub(/".*/, "")
+	/<a .*pl-video-title-link.*\/watch\?v=/ {
+		sub(/.*\/watch\?v=/,"")
+		sub(/\&.*/,"")
+		sub(/\".*/,"")
 		n++
 		printf "%03d http://www.youtube.com/watch?v=%s\n", n, $0
 	}'
